@@ -19,6 +19,16 @@ class Background:
         sc.blit(self.surface, (0, 0))
 
 
+class Ball:
+
+    def __init__(self, pg):
+        self.surface = pg.image.load('ball.png')
+        self.surface = pg.transform.scale(self.surface, (self.surface.get_width() // 2, self.surface.get_height() // 2))
+
+    def draw(self, sc):
+        sc.blit(self.surface, (0, 0))
+
+
 class Cell:
     CELL_BACKGROUND_COLOR = (210,) * 3
     CELL_BORDER_COLOR = (150,) * 3
