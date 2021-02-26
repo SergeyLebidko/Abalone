@@ -1,7 +1,7 @@
 import random
 import itertools
 from math import pi, sin, cos
-from settings import W, H, RADIUS, BORDER
+from settings import W, H, RADIUS, BORDER, CMP_SIDE, PLAYER_SIDE
 
 
 class Background:
@@ -21,12 +21,13 @@ class Background:
 
 class Ball:
 
-    def __init__(self, pg, cell):
+    def __init__(self, pg, cell, side, color_label):
         self.cell = cell
         self.cell.ball = self
         self.x, self.y = cell.x0, cell.y0
+        self.side = side
 
-        self.surface = pg.image.load('ball.png')
+        self.surface = pg.image.load(f'ball_{color_label}.png')
         normal = RADIUS * cos(pi / 6)
         self.surface = pg.transform.scale(self.surface, (int(1.6 * normal), int(1.6 * normal)))
 
@@ -135,7 +136,7 @@ class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
     TRANSPARENT_COLOR = (0,) * 3
 
-    def __init__(self, pg):
+    def __init__(self, pg, player_color_label, cmp_color_label):
         self.pg = pg
         x0, y0 = W // 2, H // 2
         self.cells = [Cell(pg, x0, y0, (0,) * 3)]
@@ -176,8 +177,13 @@ class Pool:
         for cell in self.cells:
             a, b, _ = cell.key
             if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
-                ball = Ball(self.pg, cell)
+                ball = Ball(self.pg, cell, PLAYER_SIDE, player_color_label)
                 self.balls.append(ball)
+                continue
+            if a == 4 or a == 3 or (a == 2 and b in [0, -1, -2]):
+                ball = Ball(self.pg, cell, CMP_SIDE, cmp_color_label)
+                self.balls.append(ball)
+                continue
 
     def draw(self, sc):
         for cell in self.cells:

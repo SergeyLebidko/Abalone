@@ -1,9 +1,10 @@
+import random
 import pygame as pg
-from settings import W, H, TITLE
-from classes import Pool, Background, Ball
+from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2
+from classes import Pool, Background
 
 
-def main():
+def main(cmp_color_label, player_color_label):
     # Инициализируем окно
     pg.init()
     sc = pg.display.set_mode((W, H))
@@ -11,7 +12,7 @@ def main():
     clock = pg.time.Clock()
 
     background = Background(pg)
-    pool = Pool(pg)
+    pool = Pool(pg, player_color_label, cmp_color_label)
 
     while True:
 
@@ -28,4 +29,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    color_labels = [COLOR_LABEL_1, COLOR_LABEL_2]
+    random.shuffle(color_labels)
+    main(*color_labels)

@@ -3,3 +3,9 @@ TITLE = 'Abalone'
 
 RADIUS = 60
 BORDER = 6
+
+PLAYER_SIDE = 'player'
+CMP_SIDE = 'cmp'
+
+COLOR_LABEL_1 = '1'
+COLOR_LABEL_2 = '2'
