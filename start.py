@@ -13,8 +13,6 @@ def main():
     background = Background(pg)
     pool = Pool(pg)
 
-    ball = Ball(pg)
-
     while True:
 
         events = pg.event.get()
@@ -25,7 +23,6 @@ def main():
 
         background.draw(sc)
         pool.draw(sc)
-        ball.draw(sc)
         pg.display.update()
         clock.tick(30)
 

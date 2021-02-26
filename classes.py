@@ -22,11 +22,14 @@ class Background:
 class Ball:
 
     def __init__(self, pg):
+        self.cell = None
         self.surface = pg.image.load('ball.png')
-        self.surface = pg.transform.scale(self.surface, (self.surface.get_width() // 2, self.surface.get_height() // 2))
+        normal = RADIUS * cos(pi / 6)
+        self.surface = pg.transform.scale(self.surface, (int(1.6 * normal), int(1.6 * normal)))
 
     def draw(self, sc):
-        sc.blit(self.surface, (0, 0))
+        ball_w, ball_h = self.surface.get_width(), self.surface.get_height()
+        sc.blit(self.surface, (self.cell.x0 - ball_w // 2, self.cell.y0 - ball_h // 2))
 
 
 class Cell:
@@ -35,12 +38,14 @@ class Cell:
     SMOOTH_FACTOR = 0.15
     SMOOTH_DEPTH = 1
 
-    def __init__(self, pg, x, y):
+    def __init__(self, pg, x, y, key):
         self.pg = pg
+        self.key = key
         self.x0, self.y0 = x, y
         self.coords = self._create_hexagon_coords()
         self.coords = self._smooth(self.coords, self.SMOOTH_DEPTH)
         self.around_cells = [None] * 6
+        self.ball = None
 
     def __contains__(self, dot):
         x_item, y_item = dot
@@ -124,24 +129,30 @@ class Pool:
             )
         )
 
+    DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
+
     def __init__(self, pg):
         self.pg = pg
         x0, y0 = W // 2, H // 2
-        self.cells = [Cell(pg, x0, y0)]
+        self.cells = [Cell(pg, x0, y0, (0,) * 3)]
+        self.balls = []
 
         # Генерируем ячейки
         for path in itertools.combinations_with_replacement('012345', 4):
             x, y = x0, y0
+            a, b, c = (0,) * 3
             for step in path:
                 step = int(step)
                 dx, dy = self.DIRECTIONS[step]
+                da, db, dc = self.DELTA_KEYS[step]
                 x, y = x + dx, y + dy
+                a, b, c = a + da, b + db, c + dc
 
             for cell in self.cells:
-                if (x, y) in cell:
+                if (a, b, c) == cell.key:
                     break
             else:
-                self.cells.append(Cell(pg, x, y))
+                self.cells.append(Cell(pg, x, y, (a, b, c)))
 
         # Для каждой ячейки указываем смежные ей по различным направлениям
         for cell in self.cells:
@@ -153,6 +164,17 @@ class Pool:
                         cell.around_cells[direction] = target_cell
                         break
 
+        # Расставляем шарики по ячейкам
+        for cell in self.cells:
+            a, b, _ = cell.key
+            if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
+                ball = Ball(self.pg)
+                ball.cell = cell
+                cell.ball = ball
+                self.balls.append(ball)
+
     def draw(self, sc):
         for cell in self.cells:
             cell.draw(sc)
+        for ball in self.balls:
+            ball.draw(sc)
