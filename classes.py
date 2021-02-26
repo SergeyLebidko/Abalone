@@ -174,16 +174,37 @@ class Pool:
                         break
 
         # Расставляем шарики по ячейкам
+        cmp_cell_keys = self._get_cmp_init_data()
+        player_cell_keys = self._get_player_init_data()
         for cell in self.cells:
-            a, b, _ = cell.key
-            if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
+            if cell.key in player_cell_keys:
                 ball = Ball(self.pg, cell, PLAYER_SIDE, player_color_label)
                 self.balls.append(ball)
                 continue
-            if a == 4 or a == 3 or (a == 2 and b in [0, -1, -2]):
+            if cell.key in cmp_cell_keys:
                 ball = Ball(self.pg, cell, CMP_SIDE, cmp_color_label)
                 self.balls.append(ball)
                 continue
+
+    @staticmethod
+    def _get_cmp_init_data():
+        result = []
+        for a in range(-4, 5):
+            for b in range(-4, 5):
+                for c in range(-4, 5):
+                    if a == 4 or a == 3 or (a == 2 and b in [0, -1, -2]):
+                        result.append((a, b, c))
+        return result
+
+    @staticmethod
+    def _get_player_init_data():
+        result = []
+        for a in range(-4, 5):
+            for b in range(-4, 5):
+                for c in range(-4, 5):
+                    if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
+                        result.append((a, b, c))
+        return result
 
     def draw(self, sc):
         for cell in self.cells:
