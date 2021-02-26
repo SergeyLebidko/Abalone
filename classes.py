@@ -21,29 +21,17 @@ class Background:
 
 class Ball:
 
-    def __init__(self, pg, cell, side, color_label):
+    def __init__(self, cell, side):
         self.cell = cell
         self.cell.ball = self
-        self.x, self.y = cell.x0, cell.y0
         self.side = side
-
-        self.surface = pg.image.load(f'ball_{color_label}.png')
-        normal = RADIUS * cos(pi / 6)
-        self.surface = pg.transform.scale(self.surface, (int(1.6 * normal), int(1.6 * normal)))
-
-    def draw(self, sc):
-        ball_w, ball_h = self.surface.get_width(), self.surface.get_height()
-        sc.blit(self.surface, (self.x - ball_w // 2, self.y - ball_h // 2))
 
 
 class Cell:
-    CELL_BACKGROUND_COLOR = (210,) * 3
-    CELL_BORDER_COLOR = (150,) * 3
     SMOOTH_FACTOR = 0.15
     SMOOTH_DEPTH = 1
 
-    def __init__(self, pg, x, y, key):
-        self.pg = pg
+    def __init__(self, x, y, key):
         self.key = key
         self.x0, self.y0 = x, y
         self.coords = self._create_hexagon_coords()
@@ -65,10 +53,6 @@ class Cell:
                 return False
 
         return True
-
-    def draw(self, sc):
-        self.pg.draw.polygon(sc, self.CELL_BACKGROUND_COLOR, self.coords)
-        self.pg.draw.polygon(sc, self.CELL_BORDER_COLOR, self.coords, 1)
 
     def _create_hexagon_coords(self):
         alpha = pi / 6
@@ -134,17 +118,11 @@ class Pool:
         )
 
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
-    TRANSPARENT_COLOR = (0,) * 3
 
-    def __init__(self, pg, player_color_label, cmp_color_label):
-        self.pg = pg
+    def __init__(self):
         x0, y0 = W // 2, H // 2
-        self.cells = [Cell(pg, x0, y0, (0,) * 3)]
+        self.cells = [Cell(x0, y0, (0,) * 3)]
         self.balls = []
-
-        self.cell_surface = pg.Surface((W, H))
-        self.cell_surface.set_colorkey(self.TRANSPARENT_COLOR)
-        self.cell_surface.fill(self.TRANSPARENT_COLOR)
 
         # Генерируем ячейки
         for path in itertools.combinations_with_replacement('012345', 4):
@@ -161,7 +139,7 @@ class Pool:
                 if (a, b, c) == cell.key:
                     break
             else:
-                self.cells.append(Cell(pg, x, y, (a, b, c)))
+                self.cells.append(Cell(x, y, (a, b, c)))
 
         # Для каждой ячейки указываем смежные ей по различным направлениям
         for cell in self.cells:
@@ -178,11 +156,11 @@ class Pool:
         player_cell_keys = self._get_player_init_data()
         for cell in self.cells:
             if cell.key in player_cell_keys:
-                ball = Ball(self.pg, cell, PLAYER_SIDE, player_color_label)
+                ball = Ball(cell, PLAYER_SIDE)
                 self.balls.append(ball)
                 continue
             if cell.key in cmp_cell_keys:
-                ball = Ball(self.pg, cell, CMP_SIDE, cmp_color_label)
+                ball = Ball(cell, CMP_SIDE)
                 self.balls.append(ball)
                 continue
 
@@ -206,10 +184,35 @@ class Pool:
                         result.append((a, b, c))
         return result
 
-    def draw(self, sc):
-        for cell in self.cells:
-            cell.draw(self.cell_surface)
-        sc.blit(self.cell_surface, (0, 0))
 
-        for ball in self.balls:
-            ball.draw(sc)
+class PoolPainter:
+    CELL_BACKGROUND_COLOR = (210,) * 3
+    CELL_BORDER_COLOR = (150,) * 3
+
+    def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
+        self.pg = pg
+        self.pool = pool
+        self.sc = sc
+
+        normal = RADIUS * cos(pi / 6)
+        self.cmp_ball_surface = pg.image.load(f'ball_{cmp_color_label}.png')
+        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (int(1.6 * normal), int(1.6 * normal)))
+
+        self.player_ball_surface = pg.image.load(f'ball_{player_color_label}.png')
+        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (int(1.6 * normal), int(1.6 * normal)))
+
+    def draw(self):
+        for cell in self.pool.cells:
+            self.pg.draw.polygon(self.sc, self.CELL_BACKGROUND_COLOR, cell.coords)
+            self.pg.draw.polygon(self.sc, self.CELL_BORDER_COLOR, cell.coords, 1)
+
+        for ball in self.pool.balls:
+            ball_surface = None
+            if ball.side == CMP_SIDE:
+                ball_surface = self.cmp_ball_surface
+            if ball.side == PLAYER_SIDE:
+                ball_surface = self.player_ball_surface
+
+            ball_w, ball_h = ball_surface.get_width(), ball_surface.get_height()
+            x, y = ball.cell.x0, ball.cell.y0
+            self.sc.blit(ball_surface, (x - ball_w // 2, y - ball_h // 2))
