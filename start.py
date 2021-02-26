@@ -1,6 +1,6 @@
 import pygame as pg
-from settings import W, H, TITLE, BACKGROUND_COLOR
-from classes import Pool
+from settings import W, H, TITLE
+from classes import Pool, Background
 
 
 def main():
@@ -10,6 +10,7 @@ def main():
     pg.display.set_caption(TITLE)
     clock = pg.time.Clock()
 
+    background = Background(pg)
     pool = Pool(pg)
 
     while True:
@@ -20,7 +21,7 @@ def main():
                 pg.quit()
                 exit()
 
-        sc.fill(BACKGROUND_COLOR)
+        background.draw(sc)
         pool.draw(sc)
         pg.display.update()
         clock.tick(30)

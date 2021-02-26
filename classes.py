@@ -1,10 +1,27 @@
+import random
 import itertools
 from math import pi, sin, cos
 from settings import W, H, RADIUS, BORDER
 
 
+class Background:
+    STEP = 10
+
+    def __init__(self, pg):
+        self.surface = pg.Surface((W, H))
+        for x in range(0, W, self.STEP):
+            for y in range(0, H, self.STEP):
+                color_component = random.randint(230, 240)
+                color = (color_component,) * 3
+                pg.draw.rect(self.surface, color, (x, y, self.STEP, self.STEP))
+
+    def draw(self, sc):
+        sc.blit(self.surface, (0, 0))
+
+
 class Cell:
-    CELL_BACKGROUND_COLOR = (220, 220, 220)
+    CELL_BACKGROUND_COLOR = (210,) * 3
+    CELL_BORDER_COLOR = (150,) * 3
     SMOOTH_FACTOR = 0.15
     SMOOTH_DEPTH = 1
 
@@ -32,6 +49,7 @@ class Cell:
 
     def draw(self, sc):
         self.pg.draw.polygon(sc, self.CELL_BACKGROUND_COLOR, self.coords)
+        self.pg.draw.polygon(sc, self.CELL_BORDER_COLOR, self.coords, 1)
 
     def _create_hexagon_coords(self):
         alpha = pi / 6
