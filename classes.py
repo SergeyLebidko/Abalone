@@ -21,15 +21,18 @@ class Background:
 
 class Ball:
 
-    def __init__(self, pg):
-        self.cell = None
+    def __init__(self, pg, cell):
+        self.cell = cell
+        self.cell.ball = self
+        self.x, self.y = cell.x0, cell.y0
+
         self.surface = pg.image.load('ball.png')
         normal = RADIUS * cos(pi / 6)
         self.surface = pg.transform.scale(self.surface, (int(1.6 * normal), int(1.6 * normal)))
 
     def draw(self, sc):
         ball_w, ball_h = self.surface.get_width(), self.surface.get_height()
-        sc.blit(self.surface, (self.cell.x0 - ball_w // 2, self.cell.y0 - ball_h // 2))
+        sc.blit(self.surface, (self.x - ball_w // 2, self.y - ball_h // 2))
 
 
 class Cell:
@@ -130,12 +133,17 @@ class Pool:
         )
 
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
+    TRANSPARENT_COLOR = (0,) * 3
 
     def __init__(self, pg):
         self.pg = pg
         x0, y0 = W // 2, H // 2
         self.cells = [Cell(pg, x0, y0, (0,) * 3)]
         self.balls = []
+
+        self.cell_surface = pg.Surface((W, H))
+        self.cell_surface.set_colorkey(self.TRANSPARENT_COLOR)
+        self.cell_surface.fill(self.TRANSPARENT_COLOR)
 
         # Генерируем ячейки
         for path in itertools.combinations_with_replacement('012345', 4):
@@ -168,13 +176,13 @@ class Pool:
         for cell in self.cells:
             a, b, _ = cell.key
             if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
-                ball = Ball(self.pg)
-                ball.cell = cell
-                cell.ball = ball
+                ball = Ball(self.pg, cell)
                 self.balls.append(ball)
 
     def draw(self, sc):
         for cell in self.cells:
-            cell.draw(sc)
+            cell.draw(self.cell_surface)
+        sc.blit(self.cell_surface, (0, 0))
+
         for ball in self.balls:
             ball.draw(sc)
