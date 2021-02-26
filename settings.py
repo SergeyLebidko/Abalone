@@ -1,0 +1,6 @@
+W, H = 1200, 900
+TITLE = 'Abalone'
+BACKGROUND_COLOR = (240, 240, 240)
+
+RADIUS = 60
+BORDER = 6
