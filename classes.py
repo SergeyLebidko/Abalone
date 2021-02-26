@@ -188,18 +188,19 @@ class Pool:
 class PoolPainter:
     CELL_BACKGROUND_COLOR = (210,) * 3
     CELL_BORDER_COLOR = (150,) * 3
+    BALL_SCALE_FACTOR = 1.7
 
     def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
         self.pg = pg
         self.pool = pool
         self.sc = sc
 
-        normal = RADIUS * cos(pi / 6)
+        scale = int(self.BALL_SCALE_FACTOR * RADIUS * cos(pi / 6))
         self.cmp_ball_surface = pg.image.load(f'ball_{cmp_color_label}.png')
-        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (int(1.6 * normal), int(1.6 * normal)))
+        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (scale, scale))
 
         self.player_ball_surface = pg.image.load(f'ball_{player_color_label}.png')
-        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (int(1.6 * normal), int(1.6 * normal)))
+        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (scale, scale))
 
     def draw(self):
         for cell in self.pool.cells:
