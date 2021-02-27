@@ -118,19 +118,24 @@ class PoolPainter:
         self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (scale, scale))
 
     def _create_cell_coords(self):
+        """Метод создает координаты ячеек игрового поля по их ключам"""
+
         result = {}
-        for (a, b, c), cell in self.cells.items():
-            x0, y0 = self._create_hexagon_center(a, b)
-            coords = self._create_hexagon_coords(x0, y0)
-            result[(a, b, c)] = {
-                'x0': x0,
-                'y0': y0,
+        for key, cell in self.cells.items():
+            center = self._create_hexagon_center(key)
+            coords = self._create_hexagon_coords(center)
+            result[key] = {
+                'x0': center[0],
+                'y0': center[1],
                 'coords': coords
             }
 
         return result
 
-    def _create_hexagon_center(self, a, b):
+    def _create_hexagon_center(self, key):
+        """Метод возвращает координаты центра гекса по переданному ключу"""
+
+        a, b, _ = key
         x0, y0 = W // 2, H // 2
 
         dx, dy = self.DIRECTIONS[1]
@@ -143,7 +148,10 @@ class PoolPainter:
 
         return x0, y0
 
-    def _create_hexagon_coords(self, x0, y0):
+    def _create_hexagon_coords(self, center):
+        """Метод возвращает координаты точек отрезков-сторон гекса по координатам его центра"""
+
+        x0, y0 = center
         alpha = pi / 6
         delta_alpha = pi / 3
         coords = []
@@ -159,6 +167,7 @@ class PoolPainter:
 
     def _smooth(self, coords, depth):
         """Метод сглаживает края гекса"""
+
         if depth == 0:
             return coords
 
@@ -187,7 +196,13 @@ class PoolPainter:
 
         return self._smooth(smooth_coords, depth - 1)
 
-    def _cell_at_dot(self, x, y):
+    def _cell_at_dot(self, dot):
+        """
+        Метод возвращает ключ ячейки, в которую попадает переданная точка.
+        Если переданная точка не попадает ни в одну ячейку - возвращает None
+        """
+
+        x, y = dot
         for key, cell_coord in self.cells_coord:
             x0 = cell_coord['x0']
             y0 = cell_coord['y0']
@@ -198,13 +213,16 @@ class PoolPainter:
                 factor_a, factor_b, factor_c = y2 - y1, x1 - x2, y1 * (x2 - x1) - x1 * (y2 - y1)
                 dot_val = self._normalize_value(factor_a * x + factor_b * y + factor_c)
                 if dot_val == 0:
-                    return True
+                    return key
 
                 center_val = self._normalize_value(factor_a * x0 + factor_b * y0 + factor_c)
                 if dot_val != center_val:
-                    return False
+                    break
 
-        return True
+            else:
+                return key
+
+        return None
 
     @staticmethod
     def _normalize_value(value):
