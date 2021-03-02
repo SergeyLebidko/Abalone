@@ -1,7 +1,7 @@
 import random
 import pygame as pg
 from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2
-from classes import Background, Pool, PoolPainter
+from classes import Background, Pool, PoolPainter, Group
 
 
 def main(cmp_color_label, player_color_label):
@@ -14,6 +14,7 @@ def main(cmp_color_label, player_color_label):
     background = Background(pg)
     pool = Pool()
     pool_painter = PoolPainter(pg, pool, sc, cmp_color_label, player_color_label)
+    group = Group(pool_painter)
 
     while True:
 
@@ -25,6 +26,9 @@ def main(cmp_color_label, player_color_label):
 
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
+
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                group.click(event.pos)
 
         background.draw(sc)
         pool_painter.draw()

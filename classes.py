@@ -97,6 +97,7 @@ class PoolPainter:
     CELL_BACKGROUND_COLOR = (210,) * 3
     CELL_BORDER_COLOR = (150,) * 3
     CELL_AT_CURSOR_COLOR = (230,) * 3
+    CELL_GROUP_COLOR = (173, 255, 47)
     BALL_SCALE_FACTOR = 1.3
 
     SMOOTH_FACTOR = 0.15
@@ -137,6 +138,9 @@ class PoolPainter:
 
         # Ключ ячейки под курсором
         self.key_cell_at_cursor = None
+
+        # Ключи выделенной группы
+        self.group = set()
 
     def _create_cell_coords(self):
         """Метод создает координаты ячеек игрового поля по их ключам"""
@@ -225,7 +229,7 @@ class PoolPainter:
             return 1
         return value
 
-    def _cell_at_dot(self, dot):
+    def get_key_cell_at_dot(self, dot):
         """
         Метод возвращает ключ ячейки, в которую попадает переданная точка.
         Если переданная точка не попадает ни в одну ячейку - возвращает None
@@ -256,9 +260,15 @@ class PoolPainter:
     def set_cursor_pos(self, pos):
         """ Метод устанавливает координаты курсора (для выделения ячейки под курсором)"""
 
-        key = self._cell_at_dot(pos)
+        key = self.get_key_cell_at_dot(pos)
         if key != self.key_cell_at_cursor:
             self.key_cell_at_cursor = key
+            self.redraw_cells_flag = True
+
+    def set_group(self, group):
+        tmp_group = set(group)
+        if tmp_group != self.group:
+            self.group = tmp_group
             self.redraw_cells_flag = True
 
     def draw(self):
@@ -267,10 +277,14 @@ class PoolPainter:
             self.cells_surface.fill(self.TRANSPARENT_COLOR)
             for key, cell_coord in self.cells_coord.items():
                 coords = cell_coord['coords']
+                color = self.CELL_BACKGROUND_COLOR
+
                 if key == self.key_cell_at_cursor:
-                    self.pg.draw.polygon(self.cells_surface, self.CELL_AT_CURSOR_COLOR, coords)
-                else:
-                    self.pg.draw.polygon(self.cells_surface, self.CELL_BACKGROUND_COLOR, coords)
+                    color = self.CELL_AT_CURSOR_COLOR
+                if key in self.group:
+                    color = self.CELL_GROUP_COLOR
+
+                self.pg.draw.polygon(self.cells_surface, color, coords)
                 self.pg.draw.polygon(self.cells_surface, self.CELL_BORDER_COLOR, coords, 1)
 
             self.redraw_cells_flag = False
@@ -299,3 +313,28 @@ class PoolPainter:
         # Объединяем поверхности
         self.sc.blit(self.cells_surface, (0, 0))
         self.sc.blit(self.balls_surface, (0, 0))
+
+
+class Group:
+
+    def __init__(self, pool_painter):
+        self.pool_painter = pool_painter
+        self.group = []
+
+    def click(self, pos):
+        key = self.pool_painter.get_key_cell_at_dot(pos)
+        if not key:
+            self.clear()
+            return
+
+        ball = self.pool_painter.cells[key]['content']
+        if not ball or ball['side'] != PLAYER_SIDE:
+            self.clear()
+            return
+
+        self.group.append(key)
+        self.pool_painter.set_group(self.group)
+
+    def clear(self):
+        self.group = []
+        self.pool_painter.set_group(self.group)
