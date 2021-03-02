@@ -24,6 +24,7 @@ class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
 
     def __init__(self):
+        self.actions = []
         self.cells = {
             (0, 0, 0): {
                 'content': None,
@@ -60,6 +61,18 @@ class Pool:
                 cell['content'] = CMP_SIDE
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
+
+    def apply_action(self, action):
+        self.actions.append(action)
+        for old_key, next_key in action:
+            old_cell = self.cells[old_key]
+            side = old_cell['content']
+            old_cell['content'] = None
+            if not next_key:
+                continue
+
+            next_cell = self.cells[next_key]
+            next_cell['content'] = side
 
     @staticmethod
     def _get_cmp_init_data():
@@ -267,6 +280,11 @@ class PoolPainter:
             self.group = tmp_group
             self.redraw_cells_flag = True
 
+    def refresh_pool(self):
+        self.cells = deepcopy(self.pool.cells)
+        self.redraw_cells_flag = True
+        self.redraw_balls_flag = True
+
     def draw(self):
         # Отрисовываем гексы
         if self.redraw_cells_flag:
@@ -321,12 +339,12 @@ class Group:
 
         # Блок с условиями сброса группы
         if not key:
-            self._clear()
+            self.clear()
             return
 
         ball = self.pool_painter.cells[key]['content']
         if not ball or ball != PLAYER_SIDE:
-            self._clear()
+            self.clear()
             return
 
         # Проверка попытки добавления в группу уже имеющейся в ней ячейки
@@ -373,12 +391,12 @@ class Group:
         if cells[key]['content']:
             return None
 
-        try:
-            direction = [
-                direction for g_key in self.group for direction in range(6) if cells[g_key]['around'][direction] == key
-            ][0]
-        except IndexError:
+        direction = [
+            direction for g_key in self.group for direction in range(6) if cells[g_key]['around'][direction] == key
+        ]
+        if not direction or len(direction) > 1:
             return None
+        direction = direction[0]
 
         result = []
         for g_key in self.group:
@@ -396,6 +414,6 @@ class Group:
 
         return None
 
-    def _clear(self):
+    def clear(self):
         self.group = []
         self.pool_painter.set_group(self.group)
