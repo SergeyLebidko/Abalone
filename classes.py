@@ -55,13 +55,11 @@ class Pool:
         # Расставляем шарики по ячейкам
         cmp_cell_keys = self._get_cmp_init_data()
         player_cell_keys = self._get_player_init_data()
-        ball_key = 0
         for key, cell in self.cells.items():
             if key in cmp_cell_keys:
-                cell['content'] = dict(side=CMP_SIDE, key=ball_key)
+                cell['content'] = CMP_SIDE
             if key in player_cell_keys:
-                cell['content'] = dict(side=PLAYER_SIDE, key=ball_key)
-            ball_key += 1
+                cell['content'] = PLAYER_SIDE
 
     @staticmethod
     def _get_cmp_init_data():
@@ -295,11 +293,10 @@ class PoolPainter:
                 if not ball:
                     continue
 
-                side = ball['side']
                 ball_surface = None
-                if side == CMP_SIDE:
+                if ball == CMP_SIDE:
                     ball_surface = self.cmp_ball_surface
-                if side == PLAYER_SIDE:
+                if ball == PLAYER_SIDE:
                     ball_surface = self.player_ball_surface
 
                 ball_w, ball_h = ball_surface.get_width(), ball_surface.get_height()
@@ -328,7 +325,7 @@ class Group:
             return
 
         ball = self.pool_painter.cells[key]['content']
-        if not ball or ball['side'] != PLAYER_SIDE:
+        if not ball or ball != PLAYER_SIDE:
             self.clear()
             return
 
@@ -360,6 +357,11 @@ class Group:
         # Если все условия выполнены - добавляем ячейку в группу
         self.group.append(key)
         self.pool_painter.set_group(self.group)
+
+    def create_action(self, pos):
+        key = self.pool_painter.get_key_cell_at_dot(pos)
+        if not key:
+            return
 
     def clear(self):
         self.group = []
