@@ -96,26 +96,39 @@ class PoolPainter:
 
     CELL_BACKGROUND_COLOR = (210,) * 3
     CELL_BORDER_COLOR = (150,) * 3
-    BALL_SCALE_FACTOR = 1.7
+    BALL_SCALE_FACTOR = 1.3
 
     SMOOTH_FACTOR = 0.15
     SMOOTH_DEPTH = 1
+
+    TRANSPARENT_COLOR = (127,) * 3
 
     def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
         self.pg = pg
         self.pool = pool
         self.sc = sc
 
+        # Готовим списки ячеек и их координат
         self.cells = deepcopy(pool.cells)
         self.cells_coord = self._create_cell_coords()
 
-        scale = int(self.BALL_SCALE_FACTOR * RADIUS * cos(pi / 6))
+        # Загружаем спрайты с красными и синими шариками
+        self.ball_size = int(self.BALL_SCALE_FACTOR * RADIUS * cos(pi / 6))
 
         self.cmp_ball_surface = pg.image.load(f'ball_{cmp_color_label}.png')
-        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (scale, scale))
+        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (self.ball_size,) * 2)
 
         self.player_ball_surface = pg.image.load(f'ball_{player_color_label}.png')
-        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (scale, scale))
+        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (self.ball_size,) * 2)
+
+        # Готовим поверхности для отрисовки ячеек и шариков
+        self.cells_surface = pg.Surface((W, H))
+        self.cells_surface.set_colorkey(self.TRANSPARENT_COLOR)
+        self.cells_surface.fill(self.TRANSPARENT_COLOR)
+
+        self.balls_surface = pg.Surface((W, H))
+        self.balls_surface.set_colorkey(self.TRANSPARENT_COLOR)
+        self.balls_surface.fill(self.TRANSPARENT_COLOR)
 
     def _create_cell_coords(self):
         """Метод создает координаты ячеек игрового поля по их ключам"""
@@ -196,6 +209,14 @@ class PoolPainter:
 
         return self._smooth(smooth_coords, depth - 1)
 
+    @staticmethod
+    def _normalize_value(value):
+        if value < 0:
+            return -1
+        elif value > 0:
+            return 1
+        return value
+
     def _cell_at_dot(self, dot):
         """
         Метод возвращает ключ ячейки, в которую попадает переданная точка.
@@ -203,7 +224,7 @@ class PoolPainter:
         """
 
         x, y = dot
-        for key, cell_coord in self.cells_coord:
+        for key, cell_coord in self.cells_coord.items():
             x0 = cell_coord['x0']
             y0 = cell_coord['y0']
             coords = cell_coord['coords']
@@ -224,22 +245,22 @@ class PoolPainter:
 
         return None
 
-    @staticmethod
-    def _normalize_value(value):
-        if value < 0:
-            return -1
-        elif value > 0:
-            return 1
-        return value
+    def set_cursor_pos(self, pos):
+        """ Метод устанавливает координаты курсора (для выделения ячейки под курсором)"""
+
+        key = self._cell_at_dot(pos)
+        print(key)
 
     def draw(self):
         # Отрисовываем гексы
+        self.cells_surface.fill(self.TRANSPARENT_COLOR)
         for cell_coord in self.cells_coord.values():
             coords = cell_coord['coords']
-            self.pg.draw.polygon(self.sc, self.CELL_BACKGROUND_COLOR, coords)
-            self.pg.draw.polygon(self.sc, self.CELL_BORDER_COLOR, coords, 1)
+            self.pg.draw.polygon(self.cells_surface, self.CELL_BACKGROUND_COLOR, coords)
+            self.pg.draw.polygon(self.cells_surface, self.CELL_BORDER_COLOR, coords, 1)
 
         # Отрисовываем шарики
+        self.balls_surface.fill(self.TRANSPARENT_COLOR)
         for key, cell in self.cells.items():
             ball = cell['content']
             if not ball:
@@ -254,4 +275,8 @@ class PoolPainter:
 
             ball_w, ball_h = ball_surface.get_width(), ball_surface.get_height()
             x, y = self.cells_coord[key]['x0'], self.cells_coord[key]['y0']
-            self.sc.blit(ball_surface, (x - ball_w // 2, y - ball_h // 2))
+            self.balls_surface.blit(ball_surface, (x - ball_w // 2, y - ball_h // 2))
+
+        # Объединяем поверхности
+        self.sc.blit(self.cells_surface, (0, 0))
+        self.sc.blit(self.balls_surface, (0, 0))

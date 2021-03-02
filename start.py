@@ -23,6 +23,9 @@ def main(cmp_color_label, player_color_label):
                 pg.quit()
                 exit()
 
+            if event.type == pg.MOUSEMOTION:
+                pool_painter.set_cursor_pos(event.pos)
+
         background.draw(sc)
         pool_painter.draw()
         pg.display.update()
