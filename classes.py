@@ -258,8 +258,6 @@ class PoolPainter:
         return None
 
     def set_cursor_pos(self, pos):
-        """ Метод устанавливает координаты курсора (для выделения ячейки под курсором)"""
-
         key = self.get_key_cell_at_dot(pos)
         if key != self.key_cell_at_cursor:
             self.key_cell_at_cursor = key
@@ -323,6 +321,8 @@ class Group:
 
     def click(self, pos):
         key = self.pool_painter.get_key_cell_at_dot(pos)
+
+        # Блок с условиями сброса группы
         if not key:
             self.clear()
             return
@@ -332,6 +332,32 @@ class Group:
             self.clear()
             return
 
+        # Проверка попытки добавления в группу уже имеющейся в ней ячейки
+        if key in self.group:
+            return
+
+        # Проверка возможности добавления ячейки в группу
+        if self.group:
+            group_size = len(self.group)
+            if group_size == 3:
+                self.group = []
+            else:
+                tmp_group = self.group + [key]
+                max_a = max(tmp_group, key=lambda value: value[0])[0]
+                min_a = min(tmp_group, key=lambda value: value[0])[0]
+                max_b = max(tmp_group, key=lambda value: value[1])[1]
+                min_b = min(tmp_group, key=lambda value: value[1])[1]
+                max_c = max(tmp_group, key=lambda value: value[2])[2]
+                min_c = min(tmp_group, key=lambda value: value[2])[2]
+                factor_a = abs(max_a - min_a)
+                factor_b = abs(max_b - min_b)
+                factor_c = abs(max_c - min_c)
+                factors = [factor_a, factor_b, factor_c]
+                factors.sort()
+                if (group_size == 1 and factors != [0, 1, 1]) or (group_size == 2 and factors != [0, 2, 2]):
+                    self.group = []
+
+        # Если все условия выполнены - добавляем ячейку в группу
         self.group.append(key)
         self.pool_painter.set_group(self.group)
 
