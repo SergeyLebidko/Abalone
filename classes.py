@@ -48,9 +48,9 @@ class Pool:
         # Для каждой ячейки указываем смежные ей по различным направлениям
         for (a, b, c), cell in self.cells.items():
             for direction, (da, db, dc) in enumerate(self.DELTA_KEYS):
-                a, b, c = a + da, b + db, c + dc
-                if (a, b, c) in self.cells:
-                    cell['around'][direction] = (a, b, c)
+                _a, _b, _c = a + da, b + db, c + dc
+                if (_a, _b, _c) in self.cells:
+                    cell['around'][direction] = (_a, _b, _c)
 
         # Расставляем шарики по ячейкам
         cmp_cell_keys = self._get_cmp_init_data()
@@ -321,12 +321,12 @@ class Group:
 
         # Блок с условиями сброса группы
         if not key:
-            self.clear()
+            self._clear()
             return
 
         ball = self.pool_painter.cells[key]['content']
         if not ball or ball != PLAYER_SIDE:
-            self.clear()
+            self._clear()
             return
 
         # Проверка попытки добавления в группу уже имеющейся в ней ячейки
@@ -359,10 +359,43 @@ class Group:
         self.pool_painter.set_group(self.group)
 
     def create_action(self, pos):
+        if not self.group:
+            return None
+
         key = self.pool_painter.get_key_cell_at_dot(pos)
         if not key:
-            return
+            return None
 
-    def clear(self):
+        return self._create_shift_actions(key) or self._create_line_actions(key)
+
+    def _create_shift_actions(self, key):
+        cells = self.pool_painter.cells
+        if cells[key]['content']:
+            return None
+
+        try:
+            direction = [
+                direction for g_key in self.group for direction in range(6) if cells[g_key]['around'][direction] == key
+            ][0]
+        except IndexError:
+            return None
+
+        result = []
+        for g_key in self.group:
+            group_cell = cells[g_key]
+            n_key = group_cell['around'][direction]
+            if not n_key or cells[n_key]['content']:
+                return None
+            result.append((g_key, n_key))
+
+        return result
+
+    def _create_line_actions(self, key):
+        if len(self.group) > 1:
+            return None
+
+        return None
+
+    def _clear(self):
         self.group = []
         self.pool_painter.set_group(self.group)

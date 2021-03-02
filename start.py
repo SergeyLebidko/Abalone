@@ -31,7 +31,8 @@ def main(cmp_color_label, player_color_label):
                 group.click(event.pos)
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_RIGHT:
-                group.create_action(event.pos)
+                action = group.create_action(event.pos)
+                print('action', action)
 
         background.draw(sc)
         pool_painter.draw()
