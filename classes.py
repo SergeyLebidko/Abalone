@@ -335,23 +335,26 @@ class Group:
         self.group = []
 
     def click(self, pos):
+        """ Метод добавляет в группу ячейку, на которую кликнул игрок. Координаты клика передаются в параметре pos """
+
         key = self.pool_painter.get_key_cell_at_dot(pos)
 
-        # Блок с условиями сброса группы
+        # Если игрок кликнул не на ячейке поля - очищаем группу
         if not key:
             self.clear()
             return
 
+        # Если игрок кликнул на ячейке без ширика или на ячейке с вражеским шариком - очищаем группу
         ball = self.pool_painter.cells[key]['content']
         if not ball or ball != PLAYER_SIDE:
             self.clear()
             return
 
-        # Проверка попытки добавления в группу уже имеющейся в ней ячейки
+        # Блокируем возможность повторного добавления в группу уже имеющейся там ячейки
         if key in self.group:
             return
 
-        # Проверка возможности добавления ячейки в группу
+        # Проверяем нужна ли очистка группы (и выполняем её, если нужно) перед добавлением в ячейки
         if self.group:
             group_size = len(self.group)
             if group_size == 3:
@@ -372,7 +375,7 @@ class Group:
                 if (group_size == 1 and factors != [0, 1, 1]) or (group_size == 2 and factors != [0, 2, 2]):
                     self.group = []
 
-        # Если все условия выполнены - добавляем ячейку в группу
+        # Добавляем ячейку в группу и уведомляем компонент отрисовки
         self.group.append(key)
         self.pool_painter.set_group(self.group)
 
@@ -387,10 +390,14 @@ class Group:
         return self._create_shift_actions(key) or self._create_line_actions(key)
 
     def _create_shift_actions(self, key):
+        """ Метод формирует и возвращает ход сдвига или возвращает None, если этого нельзя сделать """
+
+        # Проверяем, пуста ли ячейка, в которую кликнул пользователь для перемещения группы
         cells = self.pool_painter.cells
         if cells[key]['content']:
             return None
 
+        # Ищем направление движения для ячеек группы (оно должно определяться однозначно, иначе ход невозможен)
         direction = [
             direction for g_key in self.group for direction in range(6) if cells[g_key]['around'][direction] == key
         ]
@@ -398,6 +405,7 @@ class Group:
             return None
         direction = direction[0]
 
+        # Формируем конечный список ходов, при этом проверяем, чтобы каждая ячейка, в кторую двигается шарик была пуста
         result = []
         for g_key in self.group:
             group_cell = cells[g_key]
@@ -409,7 +417,9 @@ class Group:
         return result
 
     def _create_line_actions(self, key):
-        if len(self.group) > 1:
+        """ Метод формирует и возвращает линейный ход или возвращает None, если этого нельзя сделать """
+
+        if len(self.group) == 1:
             return None
 
         return None
