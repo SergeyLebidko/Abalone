@@ -74,6 +74,12 @@ class Pool:
             next_cell = self.cells[next_key]
             next_cell['content'] = side
 
+    @property
+    def last_action(self):
+        if self.actions:
+            return self.actions[-1]
+        return None
+
     @staticmethod
     def _get_cmp_init_data():
         result = []
@@ -116,23 +122,28 @@ class PoolPainter:
 
     TRANSPARENT_COLOR = (127,) * 3
 
+    BALL_SIZE = int(BALL_SCALE_FACTOR * RADIUS * cos(pi / 6))
+
+    class MoveAnimation:
+        """ Класс для создания анимаций перемещения шариков """
+
+        def __init__(self, start_pos, end_pos, side, surface):
+            pass
+
     def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
         self.pg = pg
         self.pool = pool
         self.sc = sc
+        self.cmp_color_label = cmp_color_label
+        self.player_color_label = player_color_label
 
         # Готовим списки ячеек и их координат
         self.cells = deepcopy(pool.cells)
         self.cells_coord = self._create_cell_coords()
 
         # Загружаем спрайты с красными и синими шариками
-        self.ball_size = int(self.BALL_SCALE_FACTOR * RADIUS * cos(pi / 6))
-
-        self.cmp_ball_surface = pg.image.load(f'ball_{cmp_color_label}.png')
-        self.cmp_ball_surface = pg.transform.scale(self.cmp_ball_surface, (self.ball_size,) * 2)
-
-        self.player_ball_surface = pg.image.load(f'ball_{player_color_label}.png')
-        self.player_ball_surface = pg.transform.scale(self.player_ball_surface, (self.ball_size,) * 2)
+        self.cmp_ball_surface = self._create_ball_surface(CMP_SIDE)
+        self.player_ball_surface = self._create_ball_surface(PLAYER_SIDE)
 
         # Готовим поверхности для отрисовки ячеек и шариков
         self.cells_surface = pg.Surface((W, H))
@@ -152,6 +163,14 @@ class PoolPainter:
 
         # Ключи выделенной группы
         self.group = set()
+
+    def _create_ball_surface(self, side):
+        if side == CMP_SIDE:
+            surface = self.pg.image.load(f'ball_{self.cmp_color_label}.png')
+        if side == PLAYER_SIDE:
+            surface = self.pg.image.load(f'ball_{self.player_color_label}.png')
+        surface = self.pg.transform.scale(surface, (self.BALL_SIZE,) * 2)
+        return surface
 
     def _create_cell_coords(self):
         """Метод создает координаты ячеек игрового поля по их ключам"""
@@ -240,7 +259,7 @@ class PoolPainter:
             return 1
         return value
 
-    def get_key_cell_at_dot(self, dot):
+    def get_key_at_dot(self, dot):
         """
         Метод возвращает ключ ячейки, в которую попадает переданная точка.
         Если переданная точка не попадает ни в одну ячейку - возвращает None
@@ -269,7 +288,7 @@ class PoolPainter:
         return None
 
     def set_cursor_pos(self, pos):
-        key = self.get_key_cell_at_dot(pos)
+        key = self.get_key_at_dot(pos)
         if key != self.key_cell_at_cursor:
             self.key_cell_at_cursor = key
             self.redraw_cells_flag = True
@@ -281,8 +300,12 @@ class PoolPainter:
             self.redraw_cells_flag = True
 
     def refresh_pool(self):
-        self.cells = deepcopy(self.pool.cells)
-        self.redraw_cells_flag = True
+        """ Метод обновляет текущий вид доски на экране в соотвтетствие с последним ходом в пуле """
+
+        action = self.pool.last_action
+        if not action:
+            return
+
         self.redraw_balls_flag = True
 
     def draw(self):
@@ -337,7 +360,7 @@ class Group:
     def click(self, pos):
         """ Метод добавляет в группу ячейку, на которую кликнул игрок. Координаты клика передаются в параметре pos """
 
-        key = self.pool_painter.get_key_cell_at_dot(pos)
+        key = self.pool_painter.get_key_at_dot(pos)
 
         # Если игрок кликнул не на ячейке поля - очищаем группу
         if not key:
@@ -383,7 +406,7 @@ class Group:
         if not self.group:
             return None
 
-        key = self.pool_painter.get_key_cell_at_dot(pos)
+        key = self.pool_painter.get_key_at_dot(pos)
         if not key:
             return None
 
