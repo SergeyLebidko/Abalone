@@ -156,14 +156,28 @@ class PoolPainter:
     class RemoveAnimation:
         """ Класс для создания анимаций удаления шариков """
 
+        STEP_COUNT = 10
+
         def __init__(self, pool_painter, pos, side):
-            pass
+            self.pool_painter = pool_painter
+            self.pos = pos
+            self.ball_surface = pool_painter.create_ball_surface(side)
+            self.steps = [
+                pool_painter.BALL_SIZE * (1 - (1 / self.STEP_COUNT) * index) for index in range(self.STEP_COUNT)
+            ]
 
         def animate(self):
-            pass
+            if not self.steps:
+                return
+
+            step = self.steps.pop(0)
+            self.ball_surface = self.pool_painter.pg.transform.scale(self.ball_surface, (step,) * 2)
+            x, y = self.pos
+            x, y = x - self.ball_surface.get_width() // 2, y - self.ball_surface.get_height() // 2
+            self.pool_painter.pg.ball_surface.blit(self.ball_surface, (x, y))
 
         def has_animate(self):
-            pass
+            return len(self.steps) > 0
 
     def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
         self.pg = pg
