@@ -148,7 +148,7 @@ class PoolPainter:
 
             x, y = self.steps.pop(0)
             x, y = int(x - self.pool_painter.BALL_SIZE / 2), int(y - self.pool_painter.BALL_SIZE / 2)
-            self.pool_painter.ball_surface.blit(self.ball_surface, (x, y))
+            self.pool_painter.balls_surface.blit(self.ball_surface, (x, y))
 
         def has_animate(self):
             return len(self.steps) > 0 or self.callback is not None
@@ -171,10 +171,10 @@ class PoolPainter:
                 return
 
             step = self.steps.pop(0)
-            self.ball_surface = self.pool_painter.pg.transform.scale(self.ball_surface, (step,) * 2)
+            self.ball_surface = self.pool_painter.pg.transform.scale(self.ball_surface, (int(step),) * 2)
             x, y = self.pos
             x, y = x - self.ball_surface.get_width() // 2, y - self.ball_surface.get_height() // 2
-            self.pool_painter.pg.ball_surface.blit(self.ball_surface, (x, y))
+            self.pool_painter.balls_surface.blit(self.ball_surface, (x, y))
 
         def has_animate(self):
             return len(self.steps) > 0
@@ -418,7 +418,13 @@ class PoolPainter:
                 x, y = self.cells_coord[key]['x0'], self.cells_coord[key]['y0']
                 self.balls_surface.blit(ball_surface, (x - ball_w // 2, y - ball_h // 2))
 
-            self.redraw_balls_flag = False
+            if self.animations:
+                for animation in self.animations:
+                    animation.animate()
+                self.animations = list(filter(lambda val: val.has_animate(), self.animations))
+                self.redraw_balls_flag = True
+            else:
+                self.redraw_balls_flag = False
 
         # Объединяем поверхности
         self.sc.blit(self.cells_surface, (0, 0))
