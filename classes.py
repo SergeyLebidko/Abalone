@@ -419,10 +419,67 @@ class Group:
     def _create_line_actions(self, key):
         """ Метод формирует и возвращает линейный ход или возвращает None, если этого нельзя сделать """
 
+        # Если длина цепочки равна 1, то линейный ход невозможен и ход считается ходом сдвига
         if len(self.group) == 1:
             return None
 
-        return None
+        # Блокируем попытку сдвинуть группой свой шарик
+        cells = self.pool_painter.cells
+        if cells[key]['content'] == PLAYER_SIDE:
+            return None
+
+        # Проверяем, находится ли ячейка, в которую кликнул пользователь на одной линии с группой
+        tmp_group = self.group + [key]
+        flag_a = all([g_key[0] == tmp_group[0][0] for g_key in tmp_group])
+        flag_b = all([g_key[1] == tmp_group[0][1] for g_key in tmp_group])
+        flag_c = all([g_key[2] == tmp_group[0][2] for g_key in tmp_group])
+        if not (flag_a or flag_b or flag_c):
+            return None
+
+        # Проверяем, достижима ли ячейка, выбранная пользователем из ячеек группы. Если да, то фиксируем направление
+        direction = [
+            direction for g_key in self.group for direction in range(6) if cells[g_key]['around'][direction] == key
+        ]
+        if not direction:
+            return None
+        direction = direction[0]
+
+        # Сортируем группу по удалению от выбранной пользователем ячейки
+        self.group.sort(key=lambda x: - (abs(x[0] - key[0]) + abs(x[1] - key[1]) + abs(x[2] - key[2])))
+
+        # Создаем сдвиги для ячеек группы
+        result = []
+        for g_key in self.group:
+            group_cell = cells[g_key]
+            n_key = group_cell['around'][direction]
+            result.append((g_key, n_key))
+
+        # Если группа толкает ячейки противника, то создаем сдвиги и для них
+        if cells[key]['content'] == CMP_SIDE:
+            s_key = key
+            s_cell = cells[key]
+            while True:
+                n_key = s_cell['around'][direction]
+                result.append((s_key, n_key))
+                if not n_key:
+                    break
+                n_cell = cells[n_key]
+                if not n_cell['content']:
+                    break
+                if n_cell['content'] == PLAYER_SIDE:
+                    return None
+
+                s_key = n_key
+                s_cell = n_cell
+
+        # Проверяем количество выполненных операций сдвига. Оно не должно превышать определенного порога
+        if len(result) > (2 * len(self.group) - 1):
+            return None
+
+        # Реверсируем результат для корректного выпонения операций
+        result.reverse()
+
+        return result
 
     def clear(self):
         self.group = []
