@@ -461,6 +461,8 @@ class Group:
             while True:
                 n_key = s_cell['around'][direction]
                 result.append((s_key, n_key))
+                if len(result) > (2 * len(self.group) - 1):
+                    return None
                 if not n_key:
                     break
                 n_cell = cells[n_key]
@@ -472,13 +474,8 @@ class Group:
                 s_key = n_key
                 s_cell = n_cell
 
-        # Проверяем количество выполненных операций сдвига. Оно не должно превышать определенного порога
-        if len(result) > (2 * len(self.group) - 1):
-            return None
-
-        # Реверсируем результат для корректного выпонения операций
+        # Реверсируем и возвращаем результат
         result.reverse()
-
         return result
 
     def clear(self):
