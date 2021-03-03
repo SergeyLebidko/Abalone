@@ -127,7 +127,42 @@ class PoolPainter:
     class MoveAnimation:
         """ Класс для создания анимаций перемещения шариков """
 
-        def __init__(self, start_pos, end_pos, side, surface):
+        STEP_COUNT = 10
+
+        def __init__(self, pool_painter, start_pos, end_pos, side, callback):
+            self.pool_painter = pool_painter
+            x1, y1 = start_pos
+            x2, y2 = end_pos
+            dx, dy = (x2 - x1) / self.STEP_COUNT, (y2 - y1) / self.STEP_COUNT
+            self.steps = [(x1 + dx * index, y1 + dy * index) for index in range(self.STEP_COUNT)]
+            self.steps.append(end_pos)
+            self.ball_surface = pool_painter.create_ball_surface(side)
+            self.callback = callback
+
+        def animate(self):
+            if not self.steps:
+                if self.callback:
+                    self.callback()
+                    self.callback = None
+                return
+
+            x, y = self.steps.pop(0)
+            x, y = int(x - self.pool_painter.BALL_SIZE / 2), int(y - self.pool_painter.BALL_SIZE / 2)
+            self.pool_painter.ball_surface.blit(self.ball_surface, (x, y))
+
+        def has_animate(self):
+            return len(self.steps) > 0 or self.callback is not None
+
+    class RemoveAnimation:
+        """ Класс для создания анимаций удаления шариков """
+
+        def __init__(self, pool_painter, pos, side):
+            pass
+
+        def animate(self):
+            pass
+
+        def has_animate(self):
             pass
 
     def __init__(self, pg, pool, sc, cmp_color_label, player_color_label):
@@ -142,8 +177,8 @@ class PoolPainter:
         self.cells_coord = self._create_cell_coords()
 
         # Загружаем спрайты с красными и синими шариками
-        self.cmp_ball_surface = self._create_ball_surface(CMP_SIDE)
-        self.player_ball_surface = self._create_ball_surface(PLAYER_SIDE)
+        self.cmp_ball_surface = self.create_ball_surface(CMP_SIDE)
+        self.player_ball_surface = self.create_ball_surface(PLAYER_SIDE)
 
         # Готовим поверхности для отрисовки ячеек и шариков
         self.cells_surface = pg.Surface((W, H))
@@ -164,13 +199,8 @@ class PoolPainter:
         # Ключи выделенной группы
         self.group = set()
 
-    def _create_ball_surface(self, side):
-        if side == CMP_SIDE:
-            surface = self.pg.image.load(f'ball_{self.cmp_color_label}.png')
-        if side == PLAYER_SIDE:
-            surface = self.pg.image.load(f'ball_{self.player_color_label}.png')
-        surface = self.pg.transform.scale(surface, (self.BALL_SIZE,) * 2)
-        return surface
+        # Список анимаций
+        self.animations = []
 
     def _create_cell_coords(self):
         """Метод создает координаты ячеек игрового поля по их ключам"""
@@ -259,6 +289,14 @@ class PoolPainter:
             return 1
         return value
 
+    def create_ball_surface(self, side):
+        if side == CMP_SIDE:
+            surface = self.pg.image.load(f'ball_{self.cmp_color_label}.png')
+        if side == PLAYER_SIDE:
+            surface = self.pg.image.load(f'ball_{self.player_color_label}.png')
+        surface = self.pg.transform.scale(surface, (self.BALL_SIZE,) * 2)
+        return surface
+
     def get_key_at_dot(self, dot):
         """
         Метод возвращает ключ ячейки, в которую попадает переданная точка.
@@ -302,9 +340,31 @@ class PoolPainter:
     def refresh_pool(self):
         """ Метод обновляет текущий вид доски на экране в соотвтетствие с последним ходом в пуле """
 
+        def create_move_animation_callback(key, _side):
+            def inner():
+                self.cells[key]['content'] = _side
+
+            return inner
+
         action = self.pool.last_action
         if not action:
             return
+
+        for old_key, next_key in action:
+            if next_key:
+                # Если следующий ключ существует, то создаем анимацию перемещения шарика
+                start_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                end_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
+                side = self.cells[old_key]['content']
+                callback = create_move_animation_callback(next_key, side)
+                self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
+            else:
+                # Если следующего ключа нет, то создаем анимацию удаления шарика
+                pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                side = self.cells[old_key]['content']
+                self.animations.append(self.RemoveAnimation(self, pos, side))
+
+            self.cells[old_key]['content'] = None
 
         self.redraw_balls_flag = True
 
