@@ -602,8 +602,8 @@ class Group:
 
 
 class ScorePane:
-    SCORE_RADIUS = 10
-    BORDER = 5
+    SCORE_RADIUS = 15
+    BORDER = 10
     SCORE_MARGIN = 8
 
     TRANSPARENT_COLOR = (0,) * 3
@@ -620,7 +620,7 @@ class ScorePane:
             self.y_anchor = self.BORDER
         if side == PLAYER_SIDE:
             self.y_anchor = H - self.BORDER - 2 * self.SCORE_RADIUS
-        self.x_anchor = W - (12 * self.SCORE_RADIUS + 5 * self.SCORE_MARGIN) // 2
+        self.x_anchor = W // 2 - (12 * self.SCORE_RADIUS + 5 * self.SCORE_MARGIN) // 2
 
         self.surface = pg.Surface((W, H))
         self.surface.set_colorkey(self.TRANSPARENT_COLOR)
@@ -641,10 +641,10 @@ class ScorePane:
             y_center = self.y_anchor + self.SCORE_RADIUS
             for index in range(1, 7):
                 if index <= self.score_count:
-                    self.pg.draw.circle(self.surface, self.SCORE_COLOR, (x_center, y_center))
+                    self.pg.draw.circle(self.surface, self.SCORE_COLOR, (x_center, y_center), self.SCORE_RADIUS)
 
+                self.pg.draw.circle(self.surface, self.SCORE_BORDER_COLOR, (x_center, y_center), self.SCORE_RADIUS, 1)
                 x_center += (2 * self.SCORE_RADIUS + self.SCORE_MARGIN)
-                self.pg.draw.circle(self.surface, self.SCORE_BORDER_COLOR, (x_center, y_center), 1)
 
             self.refresh_flag = False
 

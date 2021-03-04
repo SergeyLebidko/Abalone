@@ -1,4 +1,4 @@
-W, H = 1200, 900
+W, H = 1200, 920
 TITLE = 'Abalone'
 
 RADIUS = 60
