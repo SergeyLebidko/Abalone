@@ -607,7 +607,7 @@ class ScorePane:
     SCORE_MARGIN = 8
 
     TRANSPARENT_COLOR = (0,) * 3
-    SCORE_COLOR = (100,) * 3
+    SCORE_COLOR = (130,) * 3
     SCORE_BORDER_COLOR = (75,) * 3
 
     def __init__(self, side, pg, sc):
