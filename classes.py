@@ -127,7 +127,7 @@ class Pool:
         # Внешний цикл - перебор длин цепочки
         for count in range(3, 0, -1):
             if count == 1:
-                for key, cell in cells_side:
+                for key, cell in cells_side.items():
                     for n_key in cell['around']:
                         if not n_key or self.cells[n_key]['content']:
                             continue
@@ -135,7 +135,7 @@ class Pool:
             else:
                 # Создаем группы ячеек
                 groups = []
-                for key, cell in cells_side:
+                for key, cell in cells_side.items():
                     for direction in range(3):
                         group_keys = [key]
                         try:
@@ -164,6 +164,8 @@ class Pool:
                         action = []
                         for key in keys:
                             n_key = self.cells[key]['around'][direction]
+                            if not n_key:
+                                break
                             n_cell = self.cells[n_key]
                             if n_cell['content']:
                                 break
@@ -188,7 +190,7 @@ class Pool:
                     if last_key is None:
                         pattern += 'r'
                         break
-                    content = self.cells[last_key]
+                    content = self.cells[last_key]['content']
                     if content == side:
                         pattern += '*'
                     elif content == other_side:
@@ -199,13 +201,12 @@ class Pool:
 
                     group_keys.append(self.cells[last_key]['around'][direction])
 
-                groups.append({
-                    'pattern': pattern,
-                    'keys': group_keys.reverse()
-                })
-
-        for e in groups:
-            print(e)
+                if pattern in self.LINE_PATTERNS:
+                    group_keys.reverse()
+                    groups.append({
+                        'pattern': pattern,
+                        'keys': group_keys
+                    })
 
         # Сортируем группы по важности хода
         groups.sort(key=lambda x: self.LINE_PATTERNS.index(x['pattern']))
@@ -723,6 +724,8 @@ class Ai:
         import random
         actions = self.pool.create_actions(CMP_SIDE)
         action = random.choice(actions)
+
+        print('Применяю: ', action)
 
         self.pool.apply_action(action)
         self.cmp_score_pane.refresh_pane(self.pool.player_balls_count)
