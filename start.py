@@ -27,6 +27,10 @@ def main(cmp_color_label, player_color_label):
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
 
+            # Блокируем возможность кликов мышкой до завершения анимаций
+            if pool_painter.has_animate:
+                continue
+
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                 group.click(event.pos)
 

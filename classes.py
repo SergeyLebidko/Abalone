@@ -394,6 +394,10 @@ class PoolPainter:
 
         self.redraw_balls_flag = True
 
+    @property
+    def has_animate(self):
+        return len(self.animations) > 0
+
     def draw(self):
         # Отрисовываем гексы
         if self.redraw_cells_flag:
@@ -595,3 +599,12 @@ class Group:
     def clear(self):
         self.group = []
         self.pool_painter.set_group(self.group)
+
+
+class ScorePane:
+    SCORE_SIZE = 10
+    BORDER = 5
+    SCORE_MARGIN = 8
+
+    def __init__(self, side):
+        pass
