@@ -708,6 +708,15 @@ class Group:
         self.pool_painter.set_group(self.group)
 
 
+class Ai:
+
+    def __init__(self, pool, pool_painter, cmp_score_pane, player_score_pane):
+        self.pool = pool
+        self.pool_painter = pool_painter
+        self.cmp_score_pane = cmp_score_pane
+        self.player_score_pane = player_score_pane
+
+
 class ScorePane:
     SCORE_RADIUS = 15
     BORDER = 10
