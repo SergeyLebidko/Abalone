@@ -80,6 +80,21 @@ class Pool:
             return self.actions[-1]
         return None
 
+    @property
+    def cmp_balls_count(self):
+        return self._balls_count(CMP_SIDE)
+
+    @property
+    def player_balls_count(self):
+        return self._balls_count(PLAYER_SIDE)
+
+    def _balls_count(self, side):
+        result = 0
+        for cell in self.cells.values():
+            if cell['content'] == side:
+                result += 1
+        return result
+
     @staticmethod
     def _get_cmp_init_data():
         result = []
