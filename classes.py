@@ -127,7 +127,7 @@ class PoolPainter:
     class MoveAnimation:
         """ Класс для создания анимаций перемещения шариков """
 
-        STEP_COUNT = 10
+        STEP_COUNT = 8
 
         def __init__(self, pool_painter, start_pos, end_pos, side, callback):
             self.pool_painter = pool_painter
@@ -140,23 +140,20 @@ class PoolPainter:
             self.callback = callback
 
         def animate(self):
-            if not self.steps:
-                if self.callback:
-                    self.callback()
-                    self.callback = None
-                return
-
             x, y = self.steps.pop(0)
-            x, y = int(x - self.pool_painter.BALL_SIZE / 2), int(y - self.pool_painter.BALL_SIZE / 2)
+            x, y = int(x - self.pool_painter.BALL_SIZE // 2), int(y - self.pool_painter.BALL_SIZE // 2)
             self.pool_painter.balls_surface.blit(self.ball_surface, (x, y))
 
+            if not self.steps:
+                self.callback()
+
         def has_animate(self):
-            return len(self.steps) > 0 or self.callback is not None
+            return len(self.steps) > 0
 
     class RemoveAnimation:
         """ Класс для создания анимаций удаления шариков """
 
-        STEP_COUNT = 10
+        STEP_COUNT = 8
 
         def __init__(self, pool_painter, pos, side):
             self.pool_painter = pool_painter
@@ -422,11 +419,10 @@ class PoolPainter:
                 for animation in self.animations:
                     animation.animate()
                 self.animations = list(filter(lambda val: val.has_animate(), self.animations))
-                self.redraw_balls_flag = True
-            else:
-                self.redraw_balls_flag = False
 
-        # Объединяем поверхности
+            self.redraw_balls_flag = False or len(self.animations) > 0
+
+            # Объединяем поверхности
         self.sc.blit(self.cells_surface, (0, 0))
         self.sc.blit(self.balls_surface, (0, 0))
 
