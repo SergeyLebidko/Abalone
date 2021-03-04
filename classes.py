@@ -23,6 +23,8 @@ class Background:
 class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
 
+    LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
+
     def __init__(self):
         self.actions = []
         self.cells = {
@@ -119,7 +121,7 @@ class Pool:
         return result
 
     def _create_shift_actions(self, side):
-        cells_side = {key: cell for key, cell in self.cells.items() if cell['content'] == side}
+        cells_side = self._get_side_cells(side)
         result = []
 
         # Внешний цикл - перебор длин цепочки
@@ -131,6 +133,7 @@ class Pool:
                             continue
                         result.append([(key, n_key)])
             else:
+                # Создаем группы ячеек
                 groups = []
                 for key, cell in cells_side:
                     for direction in range(3):
@@ -149,6 +152,7 @@ class Pool:
                             'keys': group_keys
                         })
 
+                # Проверяем каждую группу на возможность сдвига. Если она есть - фиксируем соответствующие операции
                 for group in groups:
                     directions = group['directions']
                     keys = group['keys']
@@ -159,8 +163,7 @@ class Pool:
 
                         action = []
                         for key in keys:
-                            key_cell = self.cells[key]
-                            n_key = key_cell['around'][direction]
+                            n_key = self.cells[key]['around'][direction]
                             n_cell = self.cells[n_key]
                             if n_cell['content']:
                                 break
@@ -171,8 +174,53 @@ class Pool:
         return result
 
     def _create_line_actions(self, side):
+        cells_side = self._get_side_cells(side)
+        other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[side]
+
+        # Формируем группы ячеек и паттерны для них
+        groups = []
+        for direction in range(6):
+            for key in cells_side:
+                group_keys = [key]
+                pattern = ''
+                while True:
+                    last_key = group_keys[-1]
+                    if last_key is None:
+                        pattern += 'r'
+                        break
+                    content = self.cells[last_key]
+                    if content == side:
+                        pattern += '*'
+                    elif content == other_side:
+                        pattern += '#'
+                    elif content is None:
+                        pattern += 'e'
+                        break
+
+                    group_keys.append(self.cells[last_key]['around'][direction])
+
+                groups.append({
+                    'pattern': pattern,
+                    'keys': group_keys.reverse()
+                })
+
+        # Сортируем группы по важности хода
+        groups.sort(key=lambda x: self.LINE_PATTERNS.index(x['pattern']))
+
+        # Строим итоговый список ходов
         result = []
+        for group in groups:
+            actions = []
+            keys = group['keys']
+            for index in range(len(keys) - 1, 0, -1):
+                actions.append((keys[index - 1], keys[index]))
+
+            result.append(actions)
+
         return result
+
+    def _get_side_cells(self, side):
+        return {key: cell for key, cell in self.cells.items() if cell['content'] == side}
 
 
 class PoolPainter:
