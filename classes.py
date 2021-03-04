@@ -65,7 +65,8 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
     def create_actions(self, side):
-        return self._create_line_actions(side) + self._create_shift_actions(side)
+        # return self._create_line_actions(side) + self._create_shift_actions(side)
+        return self._create_shift_actions(side)
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -725,7 +726,7 @@ class Ai:
         actions = self.pool.create_actions(CMP_SIDE)
         action = random.choice(actions)
 
-        print('Применяю: ', action)
+        print('Найдено ходов: ', len(actions))
 
         self.pool.apply_action(action)
         self.cmp_score_pane.refresh_pane(self.pool.player_balls_count)

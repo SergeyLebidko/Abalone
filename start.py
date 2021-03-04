@@ -1,6 +1,6 @@
 import random
 import pygame as pg
-from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2, CMP_SIDE, PLAYER_SIDE, CMP_MODE, PLAYER_MODE, END_MODE
+from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2, CMP_SIDE, PLAYER_SIDE, CMP_MODE, PLAYER_MODE
 from classes import Background, Pool, PoolPainter, Group, ScorePane, Ai
 
 
@@ -23,7 +23,7 @@ def main(cmp_color_label, player_color_label):
     while True:
 
         # Секция расчета и применения следующего хода
-        if mode == CMP_MODE:
+        if not pool_painter.has_animate and mode == CMP_MODE:
             ai.next_action()
             mode = PLAYER_MODE
 
@@ -37,8 +37,8 @@ def main(cmp_color_label, player_color_label):
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
 
-            # Блокируем возможность кликов мышкой до завершения анимаций
-            if pool_painter.has_animate:
+            # Блокируем возможность кликов мышкой до завершения анимаций и операций по расчету хода
+            if pool_painter.has_animate or mode == CMP_MODE:
                 continue
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
