@@ -204,6 +204,9 @@ class Pool:
                     'keys': group_keys.reverse()
                 })
 
+        for e in groups:
+            print(e)
+
         # Сортируем группы по важности хода
         groups.sort(key=lambda x: self.LINE_PATTERNS.index(x['pattern']))
 
@@ -715,6 +718,16 @@ class Ai:
         self.pool_painter = pool_painter
         self.cmp_score_pane = cmp_score_pane
         self.player_score_pane = player_score_pane
+
+    def next_action(self):
+        import random
+        actions = self.pool.create_actions(CMP_SIDE)
+        action = random.choice(actions)
+
+        self.pool.apply_action(action)
+        self.cmp_score_pane.refresh_pane(self.pool.player_balls_count)
+        self.player_score_pane.refresh_pane(self.pool.cmp_balls_count)
+        self.pool_painter.refresh_pool()
 
 
 class ScorePane:

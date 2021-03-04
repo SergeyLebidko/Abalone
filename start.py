@@ -1,7 +1,7 @@
 import random
 import pygame as pg
-from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2, CMP_SIDE, PLAYER_SIDE
-from classes import Background, Pool, PoolPainter, Group, ScorePane
+from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2, CMP_SIDE, PLAYER_SIDE, CMP_MODE, PLAYER_MODE, END_MODE
+from classes import Background, Pool, PoolPainter, Group, ScorePane, Ai
 
 
 def main(cmp_color_label, player_color_label):
@@ -17,9 +17,17 @@ def main(cmp_color_label, player_color_label):
     group = Group(pool_painter)
     cmp_score_pane = ScorePane(CMP_SIDE, pg, sc)
     player_score_pane = ScorePane(PLAYER_SIDE, pg, sc)
+    ai = Ai(pool, pool_painter, cmp_score_pane, player_score_pane)
 
+    mode = PLAYER_MODE
     while True:
 
+        # Секция расчета и применения следующего хода
+        if mode == CMP_MODE:
+            ai.next_action()
+            mode = PLAYER_MODE
+
+        # Секция взаимодействия с пользователем
         events = pg.event.get()
         for event in events:
             if event.type == pg.QUIT:
@@ -44,7 +52,9 @@ def main(cmp_color_label, player_color_label):
                     player_score_pane.refresh_pane(pool.cmp_balls_count)
                     group.clear()
                     pool_painter.refresh_pool()
+                    mode = CMP_MODE
 
+        # Секция команд отрисовки
         background.draw(sc)
         cmp_score_pane.draw()
         player_score_pane.draw()
