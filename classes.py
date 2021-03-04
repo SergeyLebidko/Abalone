@@ -62,6 +62,9 @@ class Pool:
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
 
+    def create_actions(self, side):
+        return self._create_line_actions(side) + self._create_shift_actions(side)
+
     def apply_action(self, action):
         self.actions.append(action)
         for old_key, next_key in action:
@@ -113,6 +116,62 @@ class Pool:
                 for c in range(-4, 5):
                     if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
                         result.append((a, b, c))
+        return result
+
+    def _create_shift_actions(self, side):
+        result = []
+        return result
+
+    def _create_line_actions(self, side):
+        cells_side = {key: cell for key, cell in self.cells.items() if cell['content'] == side}
+        result = []
+
+        # Внешний цикл - перебор длин цепочки
+        for count in range(3, 0, -1):
+            if count == 1:
+                for key, cell in cells_side:
+                    for n_key in cell['around']:
+                        if not n_key or self.cells[n_key]['content']:
+                            continue
+                        result.append([(key, n_key)])
+            else:
+                groups = []
+                for key, cell in cells_side:
+                    for direction in range(3):
+                        group_keys = [key]
+                        try:
+                            for _ in range(count - 1):
+                                n_key = cells_side[group_keys[-1]]['around'][direction]
+                                if self.cells[n_key]['content'] != side:
+                                    raise KeyError
+                                group_keys.append(n_key)
+                        except KeyError:
+                            continue
+
+                        groups.append({
+                            'directions': [direction, direction + 3],
+                            'keys': group_keys
+                        })
+
+                for group in groups:
+                    directions = group['directions']
+                    keys = group['keys']
+
+                    for direction in range(6):
+                        if direction in directions:
+                            continue
+
+                        action = []
+                        for key in keys:
+                            key_cell = self.cells[key]
+                            n_key = key_cell['around'][direction]
+                            n_cell = self.cells[n_key]
+                            if n_cell['content']:
+                                break
+                            action.append((key, n_key))
+                        else:
+                            result.append(action)
+
         return result
 
 
