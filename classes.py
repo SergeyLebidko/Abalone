@@ -119,10 +119,6 @@ class Pool:
         return result
 
     def _create_shift_actions(self, side):
-        result = []
-        return result
-
-    def _create_line_actions(self, side):
         cells_side = {key: cell for key, cell in self.cells.items() if cell['content'] == side}
         result = []
 
@@ -172,6 +168,10 @@ class Pool:
                         else:
                             result.append(action)
 
+        return result
+
+    def _create_line_actions(self, side):
+        result = []
         return result
 
 
