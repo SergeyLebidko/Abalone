@@ -26,8 +26,12 @@ class Pool:
 
     LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
 
+    APPLY_TYPE = 'apply'
+    CANCEL_TYPE = 'cancel'
+
     def __init__(self):
         self.actions = []
+        self.last_action_description = None
         self.cells = {
             (0, 0, 0): {
                 'content': None,
@@ -73,6 +77,10 @@ class Pool:
 
     def apply_action(self, action):
         self.actions.append(action)
+        self.last_action_description = {
+            'type': self.APPLY_TYPE,
+            'action': action
+        }
         for old_key, next_key in action:
             old_cell = self.cells[old_key]
             side = old_cell['content']
@@ -83,10 +91,26 @@ class Pool:
             next_cell = self.cells[next_key]
             next_cell['content'] = side
 
-    @property
-    def last_action(self):
-        if self.actions:
-            return self.actions[-1]
+    def cancel_action(self):
+        action = self.actions.pop()
+        self.last_action_description = {
+            'type': self.CANCEL_TYPE,
+            'action': action
+        }
+        for index, (old_key, next_key) in enumerate(reversed(action)):
+            if index == 0:
+                other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[self.cells[next_key]['content']]
+
+            if next_key:
+                side = self.cells[next_key]['content']
+                self.cells[next_key]['content'] = None
+                self.cells[old_key]['content'] = side
+            else:
+                self.cells[old_key]['content'] = other_side
+
+    def get_last_action_description(self):
+        if self.last_action_description:
+            return self.last_action_description
         return None
 
     def get_winner_side(self):
@@ -293,18 +317,24 @@ class PoolPainter:
         def has_animate(self):
             return len(self.steps) > 0
 
-    class RemoveAnimation:
-        """ Класс для создания анимаций удаления шариков """
+    class ScaleAnimation:
+        """ Класс для создания анимаций появления и исчезновения шариков """
 
         STEP_COUNT = 8
 
-        def __init__(self, pool_painter, pos, side):
+        REMOVE_TYPE = 'remove'
+        CREATE_TYPE = 'create'
+
+        def __init__(self, pool_painter, pos, side, animation_type, callback=None):
             self.pool_painter = pool_painter
             self.pos = pos
             self.ball_surface = pool_painter.create_ball_surface(side)
+            self.callback = callback
             self.steps = [
-                pool_painter.BALL_SIZE * (1 - (1 / self.STEP_COUNT) * index) for index in range(self.STEP_COUNT)
+                pool_painter.BALL_SIZE * (1 - (1 / self.STEP_COUNT) * index) for index in range(1, self.STEP_COUNT)
             ]
+            if animation_type == self.CREATE_TYPE:
+                self.steps.reverse()
 
         def animate(self):
             if not self.steps:
@@ -315,6 +345,9 @@ class PoolPainter:
             x, y = self.pos
             x, y = x - self.ball_surface.get_width() // 2, y - self.ball_surface.get_height() // 2
             self.pool_painter.balls_surface.blit(self.ball_surface, (x, y))
+
+            if not self.steps and self.callback:
+                self.callback()
 
         def has_animate(self):
             return len(self.steps) > 0
@@ -494,31 +527,59 @@ class PoolPainter:
     def refresh_pool(self):
         """ Метод обновляет текущий вид доски на экране в соотвтетствие с последним ходом в пуле """
 
-        def create_move_animation_callback(key, _side):
+        def create_animation_callback(key, _side):
             def inner():
                 self.cells[key]['content'] = _side
 
             return inner
 
-        action = self.pool.last_action
-        if not action:
+        last_action_description = self.pool.get_last_action_description()
+        if not last_action_description:
             return
 
-        for old_key, next_key in action:
-            if next_key:
-                # Если следующий ключ существует, то создаем анимацию перемещения шарика
-                start_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
-                end_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
-                side = self.cells[old_key]['content']
-                callback = create_move_animation_callback(next_key, side)
-                self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
-            else:
-                # Если следующего ключа нет, то создаем анимацию удаления шарика
-                pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
-                side = self.cells[old_key]['content']
-                self.animations.append(self.RemoveAnimation(self, pos, side))
+        action_type = last_action_description['type']
+        action = last_action_description['action']
 
-            self.cells[old_key]['content'] = None
+        # Анимируем обычный ход
+        if action_type == Pool.APPLY_TYPE:
+            for old_key, next_key in action:
+                if next_key:
+                    # Создаем анимацию перемещения шарика
+                    start_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                    end_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
+                    side = self.cells[old_key]['content']
+                    callback = create_animation_callback(next_key, side)
+                    self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
+                else:
+                    # Создаем анимацию удаления шарика
+                    pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                    side = self.cells[old_key]['content']
+                    self.animations.append(self.ScaleAnimation(self, pos, side, self.ScaleAnimation.REMOVE_TYPE))
+
+                self.cells[old_key]['content'] = None
+
+        # Анимируем откат
+        if action_type == Pool.CANCEL_TYPE:
+            for index, (old_key, next_key) in enumerate(reversed(action)):
+                if index == 0:
+                    other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[self.cells[next_key]['content']]
+                if next_key:
+                    # Создаем анимацию перемещения шарика
+                    start_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
+                    end_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                    side = self.cells[next_key]['content']
+                    callback = create_animation_callback(old_key, side)
+                    self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
+                else:
+                    # Создаем анимацию появления шарика
+                    pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
+                    callback = create_animation_callback(old_key, other_side)
+                    self.animations.append(
+                        self.ScaleAnimation(self, pos, other_side, self.ScaleAnimation.CREATE_TYPE, callback=callback)
+                    )
+
+                if next_key:
+                    self.cells[next_key]['content'] = None
 
         self.redraw_balls_flag = True
 
@@ -769,7 +830,7 @@ class ScorePane:
 
     def refresh_pane(self, ball_count):
         next_score_count = 14 - ball_count
-        if next_score_count > self.score_count:
+        if next_score_count != self.score_count:
             self.score_count = next_score_count
             self.refresh_flag = True
 
@@ -806,6 +867,9 @@ class MsgPane:
         self.msg = msg
         font = self.pg.font.Font(None, 72)
         self.text_surface = font.render(msg, True, self.TEXT_COLOR)
+
+    def clear_msg(self):
+        self.msg = None
 
     def draw(self):
         if not self.msg:

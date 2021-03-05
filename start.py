@@ -40,6 +40,16 @@ def main(cmp_color_label, player_color_label):
         else:
             mode = next_mode
 
+    def cancel_action():
+        if not pool.actions:
+            return
+
+        pool.cancel_action()
+        cmp_score_pane.refresh_pane(pool.player_balls_count)
+        player_score_pane.refresh_pane(pool.cmp_balls_count)
+        group.clear()
+        pool_painter.refresh_pool()
+
     while True:
 
         # Секция расчета и применения следующего хода
@@ -57,7 +67,11 @@ def main(cmp_color_label, player_color_label):
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
 
-            # Блокируем возможность кликов мышкой до завершения анимаций и операций по расчету хода
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    cancel_action()
+
+            # Блокируем возможность кнопок мышки до завершения анимаций и операций по расчету хода
             if pool_painter.has_animate or mode != PLAYER_MODE:
                 continue
 
