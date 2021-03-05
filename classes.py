@@ -1,3 +1,4 @@
+import os
 import random
 import itertools
 from copy import deepcopy
@@ -474,10 +475,12 @@ class PoolPainter:
         return value
 
     def create_ball_surface(self, side):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        images_dir = os.path.join(base_dir, 'images')
         if side == CMP_SIDE:
-            surface = self.pg.image.load(f'ball_{self.cmp_color_label}.png')
+            surface = self.pg.image.load(os.path.join(images_dir, f'ball_{self.cmp_color_label}.png'))
         if side == PLAYER_SIDE:
-            surface = self.pg.image.load(f'ball_{self.player_color_label}.png')
+            surface = self.pg.image.load(os.path.join(images_dir, f'ball_{self.player_color_label}.png'))
         surface = self.pg.transform.scale(surface, (self.BALL_SIZE,) * 2)
         return surface
 
