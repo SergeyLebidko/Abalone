@@ -10,6 +10,8 @@ class Pool:
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
 
+    MIN_RATE = 10000000
+
     def __init__(self):
         self.actions = []
         self.last_action_description = None
@@ -88,8 +90,11 @@ class Pool:
 
     def get_rating(self):
         # Первый этап оценки рейтинга - оценка количества
-        cmp_count = 0
-        player_count = 0
+        cmp_count, player_count = self._balls_count()
+        cmp_rate = cmp_count ** 2 if cmp_count > 8 else self.MIN_RATE
+        player_rate = player_count ** 2 if player_count > 8 else self.MIN_RATE
+
+        total_rate = cmp_rate - player_rate
 
     def get_last_action_description(self):
         if self.last_action_description:
