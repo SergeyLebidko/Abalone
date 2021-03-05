@@ -17,22 +17,35 @@ def main(cmp_color_label, player_color_label):
     group = Group(pool_painter)
     cmp_score_pane = ScorePane(CMP_SIDE, pg, sc)
     player_score_pane = ScorePane(PLAYER_SIDE, pg, sc)
+    mgs_pane = MsgPane(pg, sc)
     ai = Ai(pool)
 
-    mgs_pane = MsgPane(pg, sc)
-    mgs_pane.set_msg('Вы победили!')
-
     mode = PLAYER_MODE
+
+    def apply_action(act, next_mode, group_clear):
+        if not action:
+            return
+
+        nonlocal mode
+        pool.apply_action(act)
+        cmp_score_pane.refresh_pane(pool.player_balls_count)
+        player_score_pane.refresh_pane(pool.cmp_balls_count)
+        if group_clear:
+            group.clear()
+        pool_painter.refresh_pool()
+        winner = pool.get_winner_side()
+        if winner:
+            mgs_pane.set_msg({PLAYER_SIDE: 'Вы победили!', CMP_SIDE: 'Вы проиграли...'}[winner])
+            mode = END_MODE
+        else:
+            mode = next_mode
+
     while True:
 
         # Секция расчета и применения следующего хода
         if not pool_painter.has_animate and mode == CMP_MODE:
             action = ai.next_action()
-            pool.apply_action(action)
-            cmp_score_pane.refresh_pane(pool.player_balls_count)
-            player_score_pane.refresh_pane(pool.cmp_balls_count)
-            pool_painter.refresh_pool()
-            mode = PLAYER_MODE
+            apply_action(action, PLAYER_MODE, False)
 
         # Секция взаимодействия с пользователем
         events = pg.event.get()
@@ -45,7 +58,7 @@ def main(cmp_color_label, player_color_label):
                 pool_painter.set_cursor_pos(event.pos)
 
             # Блокируем возможность кликов мышкой до завершения анимаций и операций по расчету хода
-            if pool_painter.has_animate or mode == CMP_MODE:
+            if pool_painter.has_animate or mode != PLAYER_MODE:
                 continue
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
@@ -53,13 +66,7 @@ def main(cmp_color_label, player_color_label):
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_RIGHT:
                 action = group.create_action(event.pos)
-                if action:
-                    pool.apply_action(action)
-                    cmp_score_pane.refresh_pane(pool.player_balls_count)
-                    player_score_pane.refresh_pane(pool.cmp_balls_count)
-                    group.clear()
-                    pool_painter.refresh_pool()
-                    mode = CMP_MODE
+                apply_action(action, CMP_MODE, True)
 
         # Секция команд отрисовки
         background.draw()
