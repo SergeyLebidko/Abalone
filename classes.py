@@ -524,6 +524,13 @@ class PoolPainter:
     def refresh_pool(self):
         """ Метод обновляет текущий вид доски на экране в соотвтетствие с последним ходом в пуле """
 
+        def create_move_animation(start_key, end_key, side_key, callback_key):
+            _start_pos = self.cells_coord[start_key]['x0'], self.cells_coord[start_key]['y0']
+            _end_pos = self.cells_coord[end_key]['x0'], self.cells_coord[end_key]['y0']
+            _side = self.cells[side_key]['content']
+            _callback = create_animation_callback(callback_key, _side)
+            return self.MoveAnimation(self, _start_pos, _end_pos, _side, _callback)
+
         def create_animation_callback(key, _side):
             def inner():
                 self.cells[key]['content'] = _side
@@ -542,11 +549,8 @@ class PoolPainter:
             for old_key, next_key in action:
                 if next_key:
                     # Создаем анимацию перемещения шарика
-                    start_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
-                    end_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
-                    side = self.cells[old_key]['content']
-                    callback = create_animation_callback(next_key, side)
-                    self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
+                    move_animation = create_move_animation(old_key, next_key, old_key, next_key)
+                    self.animations.append(move_animation)
                 else:
                     # Создаем анимацию удаления шарика
                     pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
@@ -562,11 +566,8 @@ class PoolPainter:
                     other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[self.cells[next_key]['content']]
                 if next_key:
                     # Создаем анимацию перемещения шарика
-                    start_pos = self.cells_coord[next_key]['x0'], self.cells_coord[next_key]['y0']
-                    end_pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
-                    side = self.cells[next_key]['content']
-                    callback = create_animation_callback(old_key, side)
-                    self.animations.append(self.MoveAnimation(self, start_pos, end_pos, side, callback))
+                    move_animation = create_move_animation(next_key, old_key, next_key, old_key)
+                    self.animations.append(move_animation)
                 else:
                     # Создаем анимацию появления шарика
                     pos = self.cells_coord[old_key]['x0'], self.cells_coord[old_key]['y0']
