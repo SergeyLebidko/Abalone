@@ -1,7 +1,13 @@
 import random
 import pygame as pg
 from settings import W, H, TITLE, COLOR_LABEL_1, COLOR_LABEL_2, CMP_SIDE, PLAYER_SIDE, CMP_MODE, PLAYER_MODE, END_MODE
-from classes import Background, Pool, PoolPainter, Group, ScorePane, Ai, MsgPane
+from classes.background import Background
+from classes.pool import Pool
+from classes.pool_painter import PoolPainter
+from classes.group import Group
+from classes.score_pane import ScorePane
+from classes.ai import Ai
+from classes.msg_pane import MsgPane
 
 
 def main(cmp_color_label, player_color_label):
