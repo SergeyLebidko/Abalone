@@ -8,7 +8,8 @@ from settings import W, H, RADIUS, BORDER, CMP_SIDE, PLAYER_SIDE
 class Background:
     STEP = 10
 
-    def __init__(self, pg):
+    def __init__(self, pg, sc):
+        self.sc = sc
         self.surface = pg.Surface((W, H))
         for x in range(0, W, self.STEP):
             for y in range(0, H, self.STEP):
@@ -16,8 +17,8 @@ class Background:
                 color = (color_component,) * 3
                 pg.draw.rect(self.surface, color, (x, y, self.STEP, self.STEP))
 
-    def draw(self, sc):
-        sc.blit(self.surface, (0, 0))
+    def draw(self):
+        self.sc.blit(self.surface, (0, 0))
 
 
 class Pool:
@@ -65,8 +66,10 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
     def create_actions(self, side):
-        # return self._create_line_actions(side) + self._create_shift_actions(side)
-        return self._create_shift_actions(side)
+        line_actions = self._create_line_actions(side)
+        shift_actions = self._create_shift_actions(side)
+        print(f'line: {len(line_actions)} shift: {len(shift_actions)} total: {len(line_actions) + len(shift_actions)}')
+        return line_actions + shift_actions
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -84,6 +87,20 @@ class Pool:
     def last_action(self):
         if self.actions:
             return self.actions[-1]
+        return None
+
+    def get_winner_side(self):
+        cmp_count = 0
+        player_count = 0
+        for _, cell in self.cells.items():
+            if cell['content'] == CMP_SIDE:
+                cmp_count += 1
+            if cell['content'] == PLAYER_SIDE:
+                player_count += 1
+        if cmp_count < 9:
+            return PLAYER_SIDE
+        if player_count < 9:
+            return CMP_SIDE
         return None
 
     @property
@@ -203,7 +220,6 @@ class Pool:
                     group_keys.append(self.cells[last_key]['around'][direction])
 
                 if pattern in self.LINE_PATTERNS:
-                    group_keys.reverse()
                     groups.append({
                         'pattern': pattern,
                         'keys': group_keys
@@ -715,23 +731,14 @@ class Group:
 
 class Ai:
 
-    def __init__(self, pool, pool_painter, cmp_score_pane, player_score_pane):
+    def __init__(self, pool):
         self.pool = pool
-        self.pool_painter = pool_painter
-        self.cmp_score_pane = cmp_score_pane
-        self.player_score_pane = player_score_pane
 
     def next_action(self):
         import random
         actions = self.pool.create_actions(CMP_SIDE)
         action = random.choice(actions)
-
-        print('Найдено ходов: ', len(actions))
-
-        self.pool.apply_action(action)
-        self.cmp_score_pane.refresh_pane(self.pool.player_balls_count)
-        self.player_score_pane.refresh_pane(self.pool.cmp_balls_count)
-        self.pool_painter.refresh_pool()
+        return action
 
 
 class ScorePane:
@@ -782,3 +789,30 @@ class ScorePane:
             self.refresh_flag = False
 
         self.sc.blit(self.surface, (0, 0))
+
+
+class MsgPane:
+    TEXT_COLOR = (255,) * 3
+
+    def __init__(self, pg, sc):
+        self.pg = pg
+        self.sc = sc
+        self.msg = None
+        self.back_surface = pg.Surface((W, H))
+        self.back_surface.set_alpha(100)
+        self.text_surface = None
+
+    def set_msg(self, msg):
+        self.msg = msg
+        font = self.pg.font.Font(None, 72)
+        self.text_surface = font.render(msg, True, self.TEXT_COLOR)
+
+    def draw(self):
+        if not self.msg:
+            return
+
+        self.sc.blit(self.back_surface, (0, 0))
+        self.sc.blit(
+            self.text_surface,
+            (W // 2 - self.text_surface.get_width() // 2, H // 2 - self.text_surface.get_height() // 2)
+        )
