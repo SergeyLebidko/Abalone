@@ -86,6 +86,11 @@ class Pool:
             else:
                 self.cells[old_key]['content'] = other_side
 
+    def get_rating(self):
+        # Первый этап оценки рейтинга - оценка количества
+        cmp_count = 0
+        player_count = 0
+
     def get_last_action_description(self):
         if self.last_action_description:
             return self.last_action_description
@@ -107,18 +112,24 @@ class Pool:
 
     @property
     def cmp_balls_count(self):
-        return self._balls_count(CMP_SIDE)
+        count, _ = self._balls_count()
+        return count
 
     @property
     def player_balls_count(self):
-        return self._balls_count(PLAYER_SIDE)
+        _, count = self._balls_count()
+        return count
 
-    def _balls_count(self, side):
-        result = 0
-        for cell in self.cells.values():
-            if cell['content'] == side:
-                result += 1
-        return result
+    def _balls_count(self):
+        cmp_count = 0
+        player_count = 0
+        for _, cell in self.cells.items():
+            if cell['content'] == CMP_SIDE:
+                cmp_count += 1
+            if cell['content'] == PLAYER_SIDE:
+                player_count += 1
+
+        return cmp_count, player_count
 
     @staticmethod
     def _get_cmp_init_data():

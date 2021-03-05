@@ -80,7 +80,7 @@ def main(cmp_color_label, player_color_label):
                 if event.key == pg.K_SPACE:
                     cancel_action()
 
-            # Блокируем возможность кнопок мышки до завершения анимаций и операций по расчету хода
+            # Блокируем возможность операций кнопками мышки до завершения анимаций и операций по расчету хода
             if pool_painter.has_animate or mode != PLAYER_MODE:
                 continue
 
