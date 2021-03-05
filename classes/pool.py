@@ -10,7 +10,7 @@ class Pool:
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
 
-    MIN_RATE = 10000000
+    MIN_RATE = -10000000
 
     def __init__(self):
         self.actions = []
@@ -95,6 +95,7 @@ class Pool:
         player_rate = player_count ** 2 if player_count > 8 else self.MIN_RATE
 
         total_rate = cmp_rate - player_rate
+        return total_rate
 
     def get_last_action_description(self):
         if self.last_action_description:
