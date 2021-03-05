@@ -97,13 +97,7 @@ class Pool:
         return None
 
     def get_winner_side(self):
-        cmp_count = 0
-        player_count = 0
-        for _, cell in self.cells.items():
-            if cell['content'] == CMP_SIDE:
-                cmp_count += 1
-            if cell['content'] == PLAYER_SIDE:
-                player_count += 1
+        cmp_count, player_count = self._balls_count()
         if cmp_count < 9:
             return PLAYER_SIDE
         if player_count < 9:
