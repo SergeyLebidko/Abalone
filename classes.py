@@ -70,10 +70,7 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
     def create_actions(self, side):
-        line_actions = self._create_line_actions(side)
-        shift_actions = self._create_shift_actions(side)
-        print(f'line: {len(line_actions)} shift: {len(shift_actions)} total: {len(line_actions) + len(shift_actions)}')
-        return line_actions + shift_actions
+        return self._create_line_actions(side) + self._create_shift_actions(side)
 
     def apply_action(self, action):
         self.actions.append(action)

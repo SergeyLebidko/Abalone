@@ -44,11 +44,14 @@ def main(cmp_color_label, player_color_label):
         if not pool.actions:
             return
 
+        nonlocal mode
         pool.cancel_action()
         cmp_score_pane.refresh_pane(pool.player_balls_count)
         player_score_pane.refresh_pane(pool.cmp_balls_count)
         group.clear()
         pool_painter.refresh_pool()
+        mgs_pane.clear_msg()
+        mode = PLAYER_MODE
 
     while True:
 
