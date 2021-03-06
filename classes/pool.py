@@ -6,11 +6,12 @@ class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
 
     LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
+    LINE_PATTERNS_REMOVE_ONLY = ['***##r', '**#r']
 
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
 
-    MAX_RATE = 10000000
+    MAX_RATE = 1000000000
 
     def __init__(self):
         self.actions = []
@@ -52,8 +53,14 @@ class Pool:
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
 
-    def create_actions(self, side):
-        return self._create_line_actions(side) + self._create_shift_actions(side)
+    def create_actions(self, side, only_remove=False):
+        """
+        Метод возвращает список доступных ходов.
+        Если only_remove=True, то возвращается только список ходов-выталкиваний
+        """
+        line_actions = self._create_line_actions(side)
+        shift_actions = [] if only_remove else self._create_shift_actions(side)
+        return line_actions + shift_actions
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -98,7 +105,27 @@ class Pool:
         cmp_count_rate = cmp_count ** 4
         player_count_rate = player_count ** 4
 
-        total_rate = cmp_count_rate - player_count_rate
+        # Второй этап оценки рейтинга - оценка близости фигур к центру доски и стороне противника
+        cmp_pos_rate = 0
+        player_pos_rate = 0
+        for (a, b, c), cell in self.cells.items():
+            content = cell['content']
+            if content == PLAYER_SIDE:
+                player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
+                player_pos_rate += a
+            if content == CMP_SIDE:
+                cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
+                cmp_pos_rate += (-1) * a
+
+        # Третий этап - оценка количества доступных ходов с выталкиванием
+        cmp_avl_actions = self.create_actions(CMP_SIDE, only_remove=True)
+        player_avl_actions = self.create_actions(PLAYER_SIDE, only_remove=True)
+        cmp_actions_rate = len(cmp_avl_actions) ** 2
+        player_actions_rate = len(player_avl_actions) ** 2
+
+        cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_actions_rate
+        player_rate = player_count_rate + player_pos_rate + player_actions_rate
+        total_rate = cmp_rate - player_rate
         return total_rate
 
     def get_last_action_description(self):
@@ -210,9 +237,10 @@ class Pool:
 
         return result
 
-    def _create_line_actions(self, side):
+    def _create_line_actions(self, side, only_remove=False):
         cells_side = self._get_side_cells(side)
         other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[side]
+        group_filter_list = self.LINE_PATTERNS_REMOVE_ONLY if only_remove else self.LINE_PATTERNS
 
         # Формируем группы ячеек и паттерны для них
         groups = []
@@ -236,14 +264,14 @@ class Pool:
 
                     group_keys.append(self.cells[last_key]['around'][direction])
 
-                if pattern in self.LINE_PATTERNS:
+                if pattern in group_filter_list:
                     groups.append({
                         'pattern': pattern,
                         'keys': group_keys
                     })
 
         # Сортируем группы по важности хода
-        groups.sort(key=lambda x: self.LINE_PATTERNS.index(x['pattern']))
+        groups.sort(key=lambda x: group_filter_list.index(x['pattern']))
 
         # Строим итоговый список ходов
         result = []
