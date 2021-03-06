@@ -9,8 +9,12 @@ class Ai:
         self.pool = pool
 
     def next_action(self):
-        self.count = 0
         actions = self.pool.create_actions(CMP_SIDE)
+
+        # Свой первый ход компьютер выбирает случайным образом
+        if len(self.pool.actions) == 1:
+            return random.choice(actions)
+
         rate_actions = []
         alpha = self.pool.MIN_RATE * 1000
         beta = self.pool.MIN_RATE * (-1000)
