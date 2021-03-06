@@ -10,7 +10,7 @@ class Pool:
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
 
-    MIN_RATE = -10000000
+    MIN_RATE = -1000000
 
     def __init__(self):
         self.actions = []
