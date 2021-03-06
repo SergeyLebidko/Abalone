@@ -22,6 +22,10 @@ class Pool:
             }
         }
 
+        # Списки ходов, доступных комипьютеру и игроку
+        self.avl_cmp_actions = []
+        self.avl_player_actions = []
+
         # Генерируем ячейки
         for path in itertools.combinations_with_replacement('012345', 4):
             a, b, c = (0,) * 3
@@ -53,7 +57,18 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
     def create_actions(self, side):
-        return self._create_line_actions(side) + self._create_shift_actions(side)
+        if side == CMP_SIDE and self.avl_cmp_actions:
+            return self.avl_cmp_actions
+        if side == PLAYER_SIDE and self.avl_player_actions:
+            return self.avl_player_actions
+
+        avl_actions = self._create_line_actions(side) + self._create_shift_actions(side)
+        if side == CMP_SIDE:
+            self.avl_cmp_actions = avl_actions
+        if side == PLAYER_SIDE:
+            self.avl_player_actions = avl_actions
+
+        return avl_actions
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -70,6 +85,10 @@ class Pool:
 
             next_cell = self.cells[next_key]
             next_cell['content'] = side
+
+        # После применения хода - сбрасываем списки доступных ходов, так как они больше не актуальны
+        self.avl_player_actions = []
+        self.avl_cmp_actions = []
 
     def cancel_action(self):
         action = self.actions.pop()
@@ -88,8 +107,12 @@ class Pool:
             else:
                 self.cells[old_key]['content'] = other_side
 
+        # После отката хода сбрасываем списки доступных ходов, так как они больше не актуальны
+        self.avl_player_actions = []
+        self.avl_cmp_actions = []
+
     def get_rating(self):
-        # Первый этап оценки рейтинга - оценка количества
+        # Первый этап оценки рейтинга - оценка количества шариков
         cmp_count, player_count = self._balls_count()
         cmp_rate = cmp_count ** 2 if cmp_count > 8 else self.MIN_RATE
         player_rate = player_count ** 2 if player_count > 8 else self.MIN_RATE

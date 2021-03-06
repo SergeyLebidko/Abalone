@@ -1,3 +1,4 @@
+import random
 from settings import CMP_SIDE, PLAYER_SIDE
 
 
@@ -8,7 +9,7 @@ class Ai:
         self.pool = pool
 
     def next_action(self):
-        import random
+        self.count = 0
         actions = self.pool.create_actions(CMP_SIDE)
         rate_actions = []
         alpha = self.pool.MIN_RATE * 1000
