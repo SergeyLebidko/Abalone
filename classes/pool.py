@@ -10,7 +10,7 @@ class Pool:
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
 
-    MIN_RATE = -1000000
+    MAX_RATE = 10000000
 
     def __init__(self):
         self.actions = []
@@ -21,10 +21,6 @@ class Pool:
                 'around': [None] * 6
             }
         }
-
-        # Списки ходов, доступных комипьютеру и игроку
-        self.avl_cmp_actions = []
-        self.avl_player_actions = []
 
         # Генерируем ячейки
         for path in itertools.combinations_with_replacement('012345', 4):
@@ -57,18 +53,7 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
     def create_actions(self, side):
-        if side == CMP_SIDE and self.avl_cmp_actions:
-            return self.avl_cmp_actions
-        if side == PLAYER_SIDE and self.avl_player_actions:
-            return self.avl_player_actions
-
-        avl_actions = self._create_line_actions(side) + self._create_shift_actions(side)
-        if side == CMP_SIDE:
-            self.avl_cmp_actions = avl_actions
-        if side == PLAYER_SIDE:
-            self.avl_player_actions = avl_actions
-
-        return avl_actions
+        return self._create_line_actions(side) + self._create_shift_actions(side)
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -85,10 +70,6 @@ class Pool:
 
             next_cell = self.cells[next_key]
             next_cell['content'] = side
-
-        # После применения хода - сбрасываем списки доступных ходов, так как они больше не актуальны
-        self.avl_player_actions = []
-        self.avl_cmp_actions = []
 
     def cancel_action(self):
         action = self.actions.pop()
@@ -107,17 +88,17 @@ class Pool:
             else:
                 self.cells[old_key]['content'] = other_side
 
-        # После отката хода сбрасываем списки доступных ходов, так как они больше не актуальны
-        self.avl_player_actions = []
-        self.avl_cmp_actions = []
-
     def get_rating(self):
         # Первый этап оценки рейтинга - оценка количества шариков
         cmp_count, player_count = self._balls_count()
-        cmp_rate = cmp_count ** 2 if cmp_count > 8 else self.MIN_RATE
-        player_rate = player_count ** 2 if player_count > 8 else self.MIN_RATE
+        if cmp_count < 9:
+            return (-1) * self.MAX_RATE
+        if player_count < 9:
+            return self.MAX_RATE
+        cmp_count_rate = cmp_count ** 4
+        player_count_rate = player_count ** 4
 
-        total_rate = cmp_rate - player_rate
+        total_rate = cmp_count_rate - player_count_rate
         return total_rate
 
     def get_last_action_description(self):
