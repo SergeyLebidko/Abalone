@@ -118,10 +118,8 @@ class Pool:
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
         player_pos_rate = 0
-        factor_a = 1
+        factor_a = 8
         actions_count = len(self.actions)
-        if actions_count < 20:
-            factor_a = 8
         if 21 <= actions_count <= 40:
             factor_a = 7
         if actions_count > 40:
