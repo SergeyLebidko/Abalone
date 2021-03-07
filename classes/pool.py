@@ -9,7 +9,7 @@ class Pool:
     LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
     LINE_PATTERNS_SET = set(LINE_PATTERNS)
 
-    OTHER_SIDE = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}
+    OTHER_SIDE_DICT = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}
 
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
@@ -56,6 +56,17 @@ class Pool:
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
 
+        # Готовим список паттернов для проверки наличия выталкивающих ходов
+        self.drop_patterns = []
+        for a, b, c in self.cells.keys():
+            if (abs(a) + abs(b) + abs(c)) != 8:
+                continue
+            for size in [3, 5]:
+                for da, db, dc in self.DELTA_KEYS:
+                    pattern = [(a + index * da, b + index * db, c + index * dc) for index in range(size)]
+                    if all([key in self.cells.keys() for key in pattern]):
+                        self.drop_patterns.append(pattern)
+
     def create_actions(self, side):
         line_actions = self._create_line_actions(side)
         shift_actions = self._create_shift_actions(side)
@@ -101,8 +112,8 @@ class Pool:
             return (-1) * self.MAX_RATE
         if player_count < 9:
             return self.MAX_RATE
-        cmp_count_rate = cmp_count * 400
-        player_count_rate = player_count * 400
+        cmp_count_rate = cmp_count * 500
+        player_count_rate = player_count * 500
 
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
@@ -110,10 +121,10 @@ class Pool:
         for (a, b, c), cell in self.cells.items():
             content = cell['content']
             if content == PLAYER_SIDE:
-                player_pos_rate += (8 - abs(a) + abs(b) + abs(c))
+                player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
                 player_pos_rate += a * 8
             if content == CMP_SIDE:
-                cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c))
+                cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
                 cmp_pos_rate += (-1) * a * 8
 
         # Третий этап - оценка прикрытий
@@ -124,19 +135,15 @@ class Pool:
             side = cell['content']
             for da, db, dc in self.SHORT_DELTA_KEYS:
                 # Проверяем первую соседнюю ячейку
-                na = a + da
-                nb = b + db
-                nc = c + dc
-                n_cell = full_cells.get((na, nb, nc))
+                n_key = a + da, b + db, c + dc
+                n_cell = full_cells.get(n_key)
                 if n_cell and n_cell['content'] == side:
                     score = 1
                 else:
                     continue
 
-                na = a + 2 * da
-                nb = b + 2 * db
-                nc = c + 2 * dc
-                n_cell = full_cells.get((na, nb, nc))
+                n_key = a + 2 * da, b + 2 * db, c + 2 * dc
+                n_cell = full_cells.get(n_key)
                 if n_cell and n_cell['content'] == side:
                     score += 3
 
@@ -260,7 +267,7 @@ class Pool:
 
     def _create_line_actions(self, side):
         cells_side = self._get_side_cells(side)
-        other_side = self.OTHER_SIDE[side]
+        other_side = self.OTHER_SIDE_DICT[side]
 
         # Формируем группы ячеек и паттерны для них
         groups = []
