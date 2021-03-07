@@ -1,11 +1,10 @@
 import random
-from settings import CMP_SIDE, PLAYER_SIDE
+from settings import CMP_SIDE, PLAYER_SIDE, AI_DEPTH, DEBUG
 from datetime import datetime
 
 
 class Ai:
-    DEPTH = 3
-    COUNT_LIMIT = 35000
+    COUNT_LIMIT = 45000
 
     def __init__(self, pool):
         self.pool = pool
@@ -26,7 +25,7 @@ class Ai:
         alpha = -self.pool.MAX_RATE
         beta = self.pool.MAX_RATE
         for action in actions:
-            rate = self.rate(action, CMP_SIDE, alpha, beta, self.DEPTH)
+            rate = self.rate(action, CMP_SIDE, alpha, beta, AI_DEPTH)
             if rate > alpha:
                 alpha = rate
             rate_actions.append((rate, action))
@@ -38,15 +37,16 @@ class Ai:
         rate_action = random.choice(rate_actions)
 
         # Выводим статистику работы
-        time_end = datetime.now()
-        time_passed = time_end - time_start
-        total_mcs = time_passed.microseconds + time_passed.seconds * 1000000
-        msg = 'Отсмотрено позиций: {count:>7} за время: {time_passed:>15} мкс на одну позицию: {mcs}'.format(
-            count=self.count,
-            time_passed=str(time_passed),
-            mcs=round(total_mcs / self.count, 2)
-        )
-        print(msg)
+        if DEBUG:
+            time_end = datetime.now()
+            time_passed = time_end - time_start
+            total_mcs = time_passed.microseconds + time_passed.seconds * 1000000
+            msg = 'Отсмотрено позиций: {count:>7} за время: {time_passed:>15} мкс на одну позицию: {mcs}'.format(
+                count=self.count,
+                time_passed=str(time_passed),
+                mcs=round(total_mcs / self.count, 2)
+            )
+            print(msg)
 
         return rate_action[1]
 
