@@ -123,10 +123,10 @@ class Pool:
             content = cell['content']
             if content == PLAYER_SIDE:
                 player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                player_pos_rate += a * 7
+                player_pos_rate += a * 8
             if content == CMP_SIDE:
                 cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                cmp_pos_rate += (-1) * a * 7
+                cmp_pos_rate += (-1) * a * 8
 
         # Третий этап - оценка прикрытий
         cmp_cover_rate = 0
