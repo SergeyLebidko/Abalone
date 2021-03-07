@@ -5,6 +5,7 @@ from datetime import datetime
 
 class Ai:
     DEPTH = 3
+    COUNT_LIMIT = 35000
 
     def __init__(self, pool):
         self.pool = pool
@@ -66,7 +67,7 @@ class Ai:
                 rate = self.rate(_action, PLAYER_SIDE, alpha, min_rate, d - 1)
                 if rate < min_rate:
                     min_rate = rate
-                if not (alpha <= min_rate <= beta):
+                if not (alpha <= min_rate <= beta) or self.count > self.COUNT_LIMIT:
                     break
 
             self.pool.cancel_action()
@@ -80,7 +81,7 @@ class Ai:
                 rate = self.rate(_action, CMP_SIDE, max_rate, beta, d - 1)
                 if rate > max_rate:
                     max_rate = rate
-                if not (alpha <= max_rate <= beta):
+                if not (alpha <= max_rate <= beta) or self.count > self.COUNT_LIMIT:
                     break
 
             self.pool.cancel_action()

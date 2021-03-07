@@ -101,8 +101,8 @@ class Pool:
             return (-1) * self.MAX_RATE
         if player_count < 9:
             return self.MAX_RATE
-        cmp_count_rate = cmp_count ** 4
-        player_count_rate = player_count ** 4
+        cmp_count_rate = cmp_count * 400
+        player_count_rate = player_count * 400
 
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
@@ -110,20 +110,43 @@ class Pool:
         for (a, b, c), cell in self.cells.items():
             content = cell['content']
             if content == PLAYER_SIDE:
-                player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                player_pos_rate += a
+                player_pos_rate += (8 - abs(a) + abs(b) + abs(c))
+                player_pos_rate += a * 8
             if content == CMP_SIDE:
-                cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                cmp_pos_rate += (-1) * a
+                cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c))
+                cmp_pos_rate += (-1) * a * 8
 
-        # Третий этап - оценка количества доступных ходов с выталкиванием
-        cmp_avl_actions = self.create_actions(CMP_SIDE)
-        player_avl_actions = self.create_actions(PLAYER_SIDE)
-        cmp_actions_rate = len(cmp_avl_actions) ** 2
-        player_actions_rate = len(player_avl_actions) ** 2
+        # Третий этап - оценка прикрытий
+        cmp_cover_rate = 0
+        player_cover_rate = 0
+        full_cells = self._get_side_cells()
+        for (a, b, c), cell in full_cells.items():
+            side = cell['content']
+            for da, db, dc in self.SHORT_DELTA_KEYS:
+                # Проверяем первую соседнюю ячейку
+                na = a + da
+                nb = b + db
+                nc = c + dc
+                n_cell = full_cells.get((na, nb, nc))
+                if n_cell and n_cell['content'] == side:
+                    score = 1
+                else:
+                    continue
 
-        cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_actions_rate
-        player_rate = player_count_rate + player_pos_rate + player_actions_rate
+                na = a + 2 * da
+                nb = b + 2 * db
+                nc = c + 2 * dc
+                n_cell = full_cells.get((na, nb, nc))
+                if n_cell and n_cell['content'] == side:
+                    score += 3
+
+                if side == CMP_SIDE:
+                    cmp_cover_rate += score
+                if side == PLAYER_SIDE:
+                    player_cover_rate += score
+
+        cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_cover_rate
+        player_rate = player_count_rate + player_pos_rate + player_cover_rate
         total_rate = cmp_rate - player_rate
         return total_rate
 
@@ -274,10 +297,12 @@ class Pool:
             keys = group[1]
             for index in range(len(keys) - 1, 0, -1):
                 actions.append((keys[index - 1], keys[index]))
-
             result.append(actions)
 
         return result
 
-    def _get_side_cells(self, side):
-        return {key: cell for key, cell in self.cells.items() if cell['content'] == side}
+    def _get_side_cells(self, side=None):
+        if side:
+            return {key: cell for key, cell in self.cells.items() if cell['content'] == side}
+        else:
+            return {key: cell for key, cell in self.cells.items() if cell['content']}
