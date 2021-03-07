@@ -155,6 +155,8 @@ class Pool:
         # Четвертый этап - проверка наличия выталкивающих ходов
         cmp_drop_rate = 0
         player_drop_rate = 0
+        cmp_drop_count = 0
+        player_drop_count = 0
         for pattern in self.drop_patterns:
             side = self.cells[pattern[0]]['content']
             if not side:
@@ -170,9 +172,11 @@ class Pool:
                     break
             else:
                 if side == CMP_SIDE:
-                    player_drop_rate += 600
+                    player_drop_count += 1
                 if side == PLAYER_SIDE:
-                    cmp_drop_rate += 600
+                    cmp_drop_count += 1
+        cmp_drop_rate = (cmp_drop_count ** 2) * 600
+        player_drop_rate = (player_drop_count ** 2) * 600
 
         cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_cover_rate + cmp_drop_rate
         player_rate = player_count_rate + player_pos_rate + player_cover_rate + player_drop_rate
