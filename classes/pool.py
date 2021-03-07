@@ -154,9 +154,9 @@ class Pool:
                     score += 2
 
                 if side == CMP_SIDE:
-                    cmp_cover_rate += score
+                    cmp_cover_rate += score ** 2
                 if side == PLAYER_SIDE:
-                    player_cover_rate += score
+                    player_cover_rate += score ** 2
 
         # Четвертый этап - проверка наличия выталкивающих ходов
         cmp_drop_count = 0
