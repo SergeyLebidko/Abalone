@@ -4,6 +4,7 @@ from settings import CMP_SIDE, PLAYER_SIDE
 
 class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
+    SHORT_DELTA_KEYS = DELTA_KEYS[:3]
 
     LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
 
@@ -192,22 +193,21 @@ class Pool:
             else:
                 # Создаем группы ячеек
                 groups = []
-                for key, cell in cells_side.items():
-                    for direction in range(3):
-                        group_keys = [key]
-                        try:
-                            for _ in range(count - 1):
-                                n_key = cells_side[group_keys[-1]]['around'][direction]
-                                if self.cells[n_key]['content'] != side:
-                                    raise KeyError
-                                group_keys.append(n_key)
-                        except KeyError:
-                            continue
+                for a, b, c in cells_side:
+                    for direction, (da, db, dc) in enumerate(self.SHORT_DELTA_KEYS):
+                        group_keys = [(a, b, c), (a + da, b + db, c + dc)]
+                        if count == 3:
+                            group_keys.append((a + 2 * da, b + 2 * db, c + 2 * dc))
 
-                        groups.append({
-                            'directions': [direction, direction + 3],
-                            'keys': group_keys
-                        })
+                        for group_key in group_keys:
+                            key_cell = self.cells.get(group_key)
+                            if not key_cell or key_cell['content']:
+                                break
+                        else:
+                            groups.append({
+                                'directions': [direction, direction + 3],
+                                'keys': group_keys
+                            })
 
                 # Проверяем каждую группу на возможность сдвига. Если она есть - фиксируем соответствующие операции
                 for group in groups:
