@@ -118,15 +118,23 @@ class Pool:
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
         player_pos_rate = 0
+        factor_a = 1
+        actions_count = len(self.actions)
+        if actions_count < 20:
+            factor_a = 8
+        if 21 <= actions_count <= 40:
+            factor_a = 7
+        if actions_count > 40:
+            factor_a = 6
         full_cells = self._get_side_cells()
         for (a, b, c), cell in full_cells.items():
             content = cell['content']
             if content == PLAYER_SIDE:
                 player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                player_pos_rate += a * 8
+                player_pos_rate += a * factor_a
             if content == CMP_SIDE:
                 cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                cmp_pos_rate += (-1) * a * 8
+                cmp_pos_rate += (-1) * a * factor_a
 
         # Третий этап - оценка прикрытий
         cmp_cover_rate = 0

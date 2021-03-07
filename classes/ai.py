@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class Ai:
-    COUNT_LIMIT = 45000
+    COUNT_LIMIT = 50000
 
     def __init__(self, pool):
         self.pool = pool
