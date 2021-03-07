@@ -1,5 +1,6 @@
 import random
 from settings import CMP_SIDE, PLAYER_SIDE
+from datetime import datetime
 
 
 class Ai:
@@ -16,8 +17,9 @@ class Ai:
         if len(self.pool.actions) == 1:
             return random.choice(actions)
 
-        # Обнуляем счетчик просмотра позиций
+        # Обнуляем счетчик просмотра позиций и фиксируем время
         self.count = 0
+        time_start = datetime.now()
 
         rate_actions = []
         alpha = -self.pool.MAX_RATE
@@ -34,7 +36,17 @@ class Ai:
         rate_actions = list(filter(lambda x: x[0] == alpha, rate_actions))
         rate_action = random.choice(rate_actions)
 
-        print('Отсмотрено позиций:', self.count)
+        # Выводим статистику работы
+        time_end = datetime.now()
+        time_passed = time_end - time_start
+        total_mcs = time_passed.microseconds + time_passed.seconds * 1000000
+        msg = 'Отсмотрено позиций: {count:>7} за время: {time_passed:>15} мкс на одну позицию: {mcs}'.format(
+            count=self.count,
+            time_passed=str(time_passed),
+            mcs=round(total_mcs / self.count, 2)
+        )
+        print(msg)
+
         return rate_action[1]
 
     def rate(self, action, up_side, alpha, beta, d):

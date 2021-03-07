@@ -105,7 +105,7 @@ class Pool:
         cmp_count_rate = cmp_count ** 4
         player_count_rate = player_count ** 4
 
-        # Второй этап оценки рейтинга - оценка близости фигур к центру доски и стороне противника
+        # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
         player_pos_rate = 0
         for (a, b, c), cell in self.cells.items():
