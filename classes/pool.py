@@ -7,6 +7,9 @@ class Pool:
     SHORT_DELTA_KEYS = DELTA_KEYS[:3]
 
     LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
+    LINE_PATTERNS_SET = set(LINE_PATTERNS)
+
+    OTHER_SIDE = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}
 
     APPLY_TYPE = 'apply'
     CANCEL_TYPE = 'cancel'
@@ -234,7 +237,7 @@ class Pool:
 
     def _create_line_actions(self, side):
         cells_side = self._get_side_cells(side)
-        other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[side]
+        other_side = self.OTHER_SIDE[side]
 
         # Формируем группы ячеек и паттерны для них
         groups = []
@@ -258,20 +261,17 @@ class Pool:
 
                     group_keys.append(self.cells[last_key]['around'][direction])
 
-                if pattern in self.LINE_PATTERNS:
-                    groups.append({
-                        'pattern': pattern,
-                        'keys': group_keys
-                    })
+                if pattern in self.LINE_PATTERNS_SET:
+                    groups.append((pattern, group_keys))
 
         # Сортируем группы по важности хода
-        groups.sort(key=lambda x: self.LINE_PATTERNS.index(x['pattern']))
+        groups.sort(key=lambda x: self.LINE_PATTERNS.index(x[0]))
 
         # Строим итоговый список ходов
         result = []
         for group in groups:
             actions = []
-            keys = group['keys']
+            keys = group[1]
             for index in range(len(keys) - 1, 0, -1):
                 actions.append((keys[index - 1], keys[index]))
 
