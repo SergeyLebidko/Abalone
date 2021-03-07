@@ -112,8 +112,8 @@ class Pool:
             return (-1) * self.MAX_RATE
         if player_count < 9:
             return self.MAX_RATE
-        cmp_count_rate = cmp_count * 500
-        player_count_rate = player_count * 500
+        cmp_count_rate = cmp_count * 600
+        player_count_rate = player_count * 600
 
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
@@ -152,8 +152,30 @@ class Pool:
                 if side == PLAYER_SIDE:
                     player_cover_rate += score
 
-        cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_cover_rate
-        player_rate = player_count_rate + player_pos_rate + player_cover_rate
+        # Четвертый этап - проверка наличия выталкивающих ходов
+        cmp_drop_rate = 0
+        player_drop_rate = 0
+        for pattern in self.drop_patterns:
+            side = self.cells[pattern[0]]['content']
+            if not side:
+                continue
+            other_side = self.OTHER_SIDE_DICT[side]
+            if len(pattern) == 3:
+                etalon = [side, other_side, other_side]
+            else:
+                etalon = [side, side, other_side, other_side, other_side]
+            for index, key in enumerate(pattern[1:], 1):
+                content = self.cells[key]['content']
+                if content != etalon[index]:
+                    break
+            else:
+                if side == CMP_SIDE:
+                    cmp_drop_rate += 800
+                if side == PLAYER_SIDE:
+                    player_drop_rate += 800
+
+        cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_cover_rate + cmp_drop_rate
+        player_rate = player_count_rate + player_pos_rate + player_cover_rate + player_drop_rate
         total_rate = cmp_rate - player_rate
         return total_rate
 

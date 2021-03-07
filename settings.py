@@ -1,8 +1,8 @@
-W, H = 1200, 920
+W, H = 900, 720
 TITLE = 'Abalone'
 
-RADIUS = 60
-BORDER = 6
+RADIUS = 45
+BORDER = 4
 
 PLAYER_SIDE = 'player'
 CMP_SIDE = 'cmp'
