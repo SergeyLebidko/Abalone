@@ -214,19 +214,19 @@ class Pool:
                     directions = group['directions']
                     keys = group['keys']
 
-                    for direction in range(6):
+                    for direction, (da, db, dc) in enumerate(self.DELTA_KEYS):
                         if direction in directions:
                             continue
 
                         action = []
-                        for key in keys:
-                            n_key = self.cells[key]['around'][direction]
-                            if not n_key:
+                        for a, b, c in keys:
+                            na = a + da,
+                            nb = b + db
+                            nc = c + dc
+                            n_cell = self.cells.get((na, nb, nc))
+                            if not n_cell or n_cell['content']:
                                 break
-                            n_cell = self.cells[n_key]
-                            if n_cell['content']:
-                                break
-                            action.append((key, n_key))
+                            action.append(((a, b, c), (na, nb, nc)))
                         else:
                             result.append(action)
 
