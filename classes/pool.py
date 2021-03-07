@@ -153,8 +153,6 @@ class Pool:
                     player_cover_rate += score
 
         # Четвертый этап - проверка наличия выталкивающих ходов
-        cmp_drop_rate = 0
-        player_drop_rate = 0
         cmp_drop_count = 0
         player_drop_count = 0
         for pattern in self.drop_patterns:
