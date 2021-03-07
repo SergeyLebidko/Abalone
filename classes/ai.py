@@ -41,7 +41,7 @@ class Ai:
             time_end = datetime.now()
             time_passed = time_end - time_start
             total_mcs = time_passed.microseconds + time_passed.seconds * 1000000
-            msg = 'Отсмотрено позиций: {count:>7} за время: {time_passed:>15} мкс на одну позицию: {mcs}'.format(
+            msg = 'Проверено позиций: {count:>6} время: {time_passed:>15} мкс/позицию: {mcs}'.format(
                 count=self.count,
                 time_passed=str(time_passed),
                 mcs=round(total_mcs / self.count, 2)

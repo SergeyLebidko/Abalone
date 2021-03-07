@@ -6,7 +6,7 @@ class Pool:
     DELTA_KEYS = [(0, 1, 1), (1, 0, 1), (1, -1, 0), (0, -1, -1), (-1, 0, -1), (-1, 1, 0)]
     SHORT_DELTA_KEYS = DELTA_KEYS[:3]
 
-    LINE_PATTERNS = ['***##r', '**#r', '***##e', '***#e', '**#e', '***e', '**e']
+    LINE_PATTERNS = ['**#r', '***##r', '***##e', '***#e', '**#e', '***e', '**e']
     LINE_PATTERNS_SET = set(LINE_PATTERNS)
 
     OTHER_SIDE_DICT = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}
@@ -112,25 +112,25 @@ class Pool:
             return (-1) * self.MAX_RATE
         if player_count < 9:
             return self.MAX_RATE
-        cmp_count_rate = cmp_count * 2000
-        player_count_rate = player_count * 2000
+        cmp_count_rate = (cmp_count ** 2) * 1900
+        player_count_rate = (player_count ** 2) * 1900
 
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
         player_pos_rate = 0
-        for (a, b, c), cell in self.cells.items():
+        full_cells = self._get_side_cells()
+        for (a, b, c), cell in full_cells.items():
             content = cell['content']
             if content == PLAYER_SIDE:
                 player_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                player_pos_rate += a * 8
+                player_pos_rate += a * 7
             if content == CMP_SIDE:
                 cmp_pos_rate += (8 - abs(a) + abs(b) + abs(c)) * 2
-                cmp_pos_rate += (-1) * a * 8
+                cmp_pos_rate += (-1) * a * 7
 
         # Третий этап - оценка прикрытий
         cmp_cover_rate = 0
         player_cover_rate = 0
-        full_cells = self._get_side_cells()
         for (a, b, c), cell in full_cells.items():
             side = cell['content']
             for da, db, dc in self.SHORT_DELTA_KEYS:
@@ -145,7 +145,7 @@ class Pool:
                 n_key = a + 2 * da, b + 2 * db, c + 2 * dc
                 n_cell = full_cells.get(n_key)
                 if n_cell and n_cell['content'] == side:
-                    score += 3
+                    score += 2
 
                 if side == CMP_SIDE:
                     cmp_cover_rate += score
@@ -170,9 +170,9 @@ class Pool:
                     break
             else:
                 if side == CMP_SIDE:
-                    player_drop_rate += 800
+                    player_drop_rate += 600
                 if side == PLAYER_SIDE:
-                    cmp_drop_rate += 800
+                    cmp_drop_rate += 600
 
         cmp_rate = cmp_count_rate + cmp_pos_rate + cmp_cover_rate + cmp_drop_rate
         player_rate = player_count_rate + player_pos_rate + player_cover_rate + player_drop_rate
