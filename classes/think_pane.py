@@ -4,6 +4,7 @@ from settings import W, H
 class ThinkPane:
     COLORS = [(192,) * 3, (128,) * 3, (105,) * 3, (80,) * 3]
     SQUARE_SIZE = 30
+    COORDS = [(10, 10), (10 + SQUARE_SIZE, 10), (10 + SQUARE_SIZE, 10 + SQUARE_SIZE), (10, 10 + SQUARE_SIZE)]
     ALPHA = 150
 
     def __init__(self, pg, sc):
@@ -29,10 +30,9 @@ class ThinkPane:
         self.pg.draw.rect(self.surface, (0,) * 3, (10, 10, self.SQUARE_SIZE * 2, self.SQUARE_SIZE * 2))
 
         color_index = 0
-        for x in range(10, 10 + 2 * self.SQUARE_SIZE, self.SQUARE_SIZE):
-            for y in range(10, 10 + 2 * self.SQUARE_SIZE, self.SQUARE_SIZE):
-                self.pg.draw.rect(self.surface, self.COLORS[color_index], (x, y, self.SQUARE_SIZE, self.SQUARE_SIZE))
-                color_index += 1
+        for x, y in self.COORDS:
+            self.pg.draw.rect(self.surface, self.COLORS[color_index], (x, y, self.SQUARE_SIZE, self.SQUARE_SIZE))
+            color_index += 1
 
         self.counter += 1
         if self.counter == 5:
