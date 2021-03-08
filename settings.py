@@ -14,5 +14,7 @@ CMP_MODE = 'cmp_mode'
 PLAYER_MODE = 'player_mode'
 END_MODE = 'end_mode'
 
-AI_DEPTH = 4
+LOW_DEPTH = 2
+MID_DEPTH = 3
+DEEP_DEPTH = 4
 DEBUG = True

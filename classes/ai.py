@@ -1,5 +1,5 @@
 import random
-from settings import CMP_SIDE, PLAYER_SIDE, AI_DEPTH, DEBUG
+from settings import CMP_SIDE, PLAYER_SIDE, LOW_DEPTH, MID_DEPTH, DEEP_DEPTH, DEBUG
 from datetime import datetime
 
 
@@ -24,11 +24,19 @@ class Ai:
         self.current_count = 0
         time_start = datetime.now()
 
+        # В зависимости от количества ходов в партии выбираем глубину просчета
+        depth = DEEP_DEPTH
+        actions_count = self.pool.actions
+        if actions_count <= 9:
+            depth = LOW_DEPTH
+        if 10 <= actions_count <= 19:
+            depth = MID_DEPTH
+
         rate_actions = []
         alpha = -self.pool.MAX_RATE
         beta = self.pool.MAX_RATE
         for action in actions:
-            rate_generator = self.rate(action, CMP_SIDE, alpha, beta, AI_DEPTH)
+            rate_generator = self.rate(action, CMP_SIDE, alpha, beta, depth)
             while True:
                 rate = next(rate_generator)
                 if rate is None:
