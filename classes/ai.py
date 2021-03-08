@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class Ai:
-    TOTAL_VIEW_LIMIT = 300000
+    TOTAL_VIEW_LIMIT = 500000
     CURRENT_COUNT_LIMIT = 200
 
     def __init__(self, pool):
