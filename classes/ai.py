@@ -8,7 +8,7 @@ class Ai:
 
     def __init__(self, pool):
         self.pool = pool
-        self.count = 0
+        self.view_position_count = 0
 
     def action_generator(self):
         actions = self.pool.create_actions(CMP_SIDE)
@@ -18,7 +18,7 @@ class Ai:
             yield random.choice(actions)
 
         # Обнуляем счетчик просмотра позиций и фиксируем время
-        self.count = 0
+        self.view_position_count = 0
         time_start = datetime.now()
 
         rate_actions = []
@@ -42,10 +42,10 @@ class Ai:
             time_end = datetime.now()
             time_passed = time_end - time_start
             total_mcs = time_passed.microseconds + time_passed.seconds * 1000000
-            msg = 'Проверено позиций: {count:>6} время: {time_passed:>15} мкс/позицию: {mcs}'.format(
-                count=self.count,
+            msg = 'Просмотрено позиций: {count:>6} время: {time_passed:>15} мкс/позицию: {mcs}'.format(
+                count=self.view_position_count,
                 time_passed=str(time_passed),
-                mcs=round(total_mcs / self.count, 2)
+                mcs=round(total_mcs / self.view_position_count, 2)
             )
             print(msg)
 
@@ -56,7 +56,7 @@ class Ai:
         if d == 0:
             self.pool.apply_action(action)
             rate = self.pool.get_rating()
-            self.count += 1
+            self.view_position_count += 1
             self.pool.cancel_action()
             return rate
 
@@ -68,7 +68,7 @@ class Ai:
                 rate = self.rate(_action, PLAYER_SIDE, alpha, min_rate, d - 1)
                 if rate < min_rate:
                     min_rate = rate
-                if not (alpha <= min_rate <= beta) or self.count > self.COUNT_LIMIT:
+                if not (alpha <= min_rate <= beta) or self.view_position_count > self.COUNT_LIMIT:
                     break
 
             self.pool.cancel_action()
@@ -82,7 +82,7 @@ class Ai:
                 rate = self.rate(_action, CMP_SIDE, max_rate, beta, d - 1)
                 if rate > max_rate:
                     max_rate = rate
-                if not (alpha <= max_rate <= beta) or self.count > self.COUNT_LIMIT:
+                if not (alpha <= max_rate <= beta) or self.view_position_count > self.COUNT_LIMIT:
                     break
 
             self.pool.cancel_action()
