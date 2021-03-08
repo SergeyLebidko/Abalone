@@ -1,4 +1,5 @@
 import itertools
+from copy import deepcopy
 from settings import CMP_SIDE, PLAYER_SIDE
 
 
@@ -56,6 +57,11 @@ class Pool:
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
 
+        # Объекты для хранения копий состояний
+        self.cells_copy = deepcopy(self.cells)
+        self.actions_copy = deepcopy(self.actions)
+        self.last_action_description_copy = deepcopy(self.last_action_description)
+
         # Готовим список паттернов для проверки наличия выталкивающих ходов
         self.drop_patterns = []
         for a, b, c in self.cells.keys():
@@ -71,6 +77,16 @@ class Pool:
         line_actions = self._create_line_actions(side)
         shift_actions = self._create_shift_actions(side)
         return line_actions + shift_actions
+
+    def backup_state(self):
+        self.cells_copy = deepcopy(self.cells)
+        self.actions_copy = deepcopy(self.actions)
+        self.last_action_description_copy = deepcopy(self.last_action_description)
+
+    def retrieve_state(self):
+        self.cells = self.cells_copy
+        self.actions = self.actions_copy
+        self.last_action_description = self.last_action_description_copy
 
     def apply_action(self, action):
         self.actions.append(action)

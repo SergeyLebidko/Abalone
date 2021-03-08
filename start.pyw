@@ -73,6 +73,7 @@ def main(cmp_color_label, player_color_label):
                     action_generator = None
                     think_pane.hide()
             else:
+                pool.backup_state()
                 action_generator = ai.action_generator()
                 think_pane.show()
 
@@ -86,9 +87,12 @@ def main(cmp_color_label, player_color_label):
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
 
-            if not pool_painter.has_animate and mode == PLAYER_MODE and event.type == pg.KEYDOWN:
-                if event.key == pg.K_SPACE:
-                    cancel_action()
+            if not pool_painter.has_animate and event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                if mode == CMP_MODE:
+                    pool.retrieve_state()
+                    action_generator = None
+                    think_pane.hide()
+                cancel_action()
 
             # Блокируем возможность операций кнопками мышки до завершения анимаций и операций по расчету хода
             if pool_painter.has_animate or mode != PLAYER_MODE:
