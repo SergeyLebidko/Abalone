@@ -1,7 +1,7 @@
 import os
 from copy import deepcopy
 from math import pi, cos, sin
-from settings import W, H, RADIUS, BORDER, CMP_SIDE, PLAYER_SIDE
+from settings import W, H, RADIUS, CELLS_MARGIN, CMP_SIDE, PLAYER_SIDE
 from .pool import Pool
 
 
@@ -167,8 +167,8 @@ class PoolPainter:
         for _ in range(6):
             coords.append(
                 (
-                    x0 + (RADIUS - BORDER / 2) * cos(alpha),
-                    y0 - (RADIUS - BORDER / 2) * sin(alpha)
+                    x0 + (RADIUS - CELLS_MARGIN / 2) * cos(alpha),
+                    y0 - (RADIUS - CELLS_MARGIN / 2) * sin(alpha)
                 )
             )
             alpha += delta_alpha

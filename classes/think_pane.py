@@ -1,10 +1,9 @@
-from datetime import datetime
 from settings import W, H
 
 
 class ThinkPane:
-    COLORS = [(255, 69, 0), (0, 255, 0), (30, 144, 255), (255, 255, 0)]
-    SQUARE_SIZE = 20
+    COLORS = [(192,) * 3, (128,) * 3, (105,) * 3, (80,) * 3]
+    SQUARE_SIZE = 30
     ALPHA = 150
 
     def __init__(self, pg, sc):
@@ -14,10 +13,11 @@ class ThinkPane:
         self.surface.set_colorkey((0,) * 3)
         self.surface.set_alpha(self.ALPHA)
         self.show_flag = False
-        self.t1 = datetime.now().second
+        self.counter = 0
 
     def show(self):
         self.show_flag = True
+        self.counter = 0
 
     def hide(self):
         self.show_flag = False
@@ -26,21 +26,17 @@ class ThinkPane:
         if not self.show_flag:
             return
 
-        self.pg.draw.rect(
-            self.surface,
-            (0,) * 3,
-            (W // 2 - self.SQUARE_SIZE, H // 2 - self.SQUARE_SIZE, self.SQUARE_SIZE * 2, self.SQUARE_SIZE * 2)
-        )
+        self.pg.draw.rect(self.surface, (0,) * 3, (10, 10, self.SQUARE_SIZE * 2, self.SQUARE_SIZE * 2))
 
         color_index = 0
-        for x in range(W // 2 - self.SQUARE_SIZE, W // 2 + self.SQUARE_SIZE, self.SQUARE_SIZE):
-            for y in range(H // 2 - self.SQUARE_SIZE, H // 2 + self.SQUARE_SIZE, self.SQUARE_SIZE):
+        for x in range(10, 10 + 2 * self.SQUARE_SIZE, self.SQUARE_SIZE):
+            for y in range(10, 10 + 2 * self.SQUARE_SIZE, self.SQUARE_SIZE):
                 self.pg.draw.rect(self.surface, self.COLORS[color_index], (x, y, self.SQUARE_SIZE, self.SQUARE_SIZE))
                 color_index += 1
 
-        t2 = datetime.now().second
-        if t2 != self.t1:
+        self.counter += 1
+        if self.counter == 5:
             self.COLORS = [self.COLORS[-1]] + self.COLORS[:-1]
-            self.t1 = t2
+            self.counter = 0
 
         self.sc.blit(self.surface, (0, 0))
