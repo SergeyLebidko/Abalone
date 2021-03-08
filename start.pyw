@@ -86,7 +86,7 @@ def main(cmp_color_label, player_color_label):
             if event.type == pg.MOUSEMOTION:
                 pool_painter.set_cursor_pos(event.pos)
 
-            if event.type == pg.KEYDOWN:
+            if not pool_painter.has_animate and mode == PLAYER_MODE and event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     cancel_action()
 
