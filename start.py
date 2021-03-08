@@ -8,6 +8,7 @@ from classes.group import Group
 from classes.score_pane import ScorePane
 from classes.ai import Ai
 from classes.msg_pane import MsgPane
+from classes.think_pane import ThinkPane
 
 
 def main(cmp_color_label, player_color_label):
@@ -24,6 +25,7 @@ def main(cmp_color_label, player_color_label):
     cmp_score_pane = ScorePane(CMP_SIDE, pg, sc)
     player_score_pane = ScorePane(PLAYER_SIDE, pg, sc)
     mgs_pane = MsgPane(pg, sc)
+    think_pane = ThinkPane(pg, sc)
     ai = Ai(pool)
     action_generator = None
 
@@ -69,10 +71,10 @@ def main(cmp_color_label, player_color_label):
                 if action:
                     apply_action(action, PLAYER_MODE, False)
                     action_generator = None
-                    mgs_pane.clear_msg()
+                    think_pane.hide()
             else:
                 action_generator = ai.action_generator()
-                mgs_pane.set_msg('я думаю...')
+                think_pane.show()
 
         # Секция взаимодействия с пользователем
         events = pg.event.get()
@@ -105,6 +107,7 @@ def main(cmp_color_label, player_color_label):
         player_score_pane.draw()
         pool_painter.draw()
         mgs_pane.draw()
+        think_pane.draw()
         pg.display.update()
         clock.tick(30)
 
