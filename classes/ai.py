@@ -26,10 +26,10 @@ class Ai:
 
         # В зависимости от количества ходов в партии выбираем глубину просчета
         depth = DEEP_DEPTH
-        actions_count = self.pool.actions
-        if actions_count <= 9:
+        actions_count = len(self.pool.actions)
+        if actions_count <= 5:
             depth = LOW_DEPTH
-        if 10 <= actions_count <= 19:
+        if 6 <= actions_count <= 17:
             depth = MID_DEPTH
 
         rate_actions = []
