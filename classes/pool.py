@@ -120,10 +120,10 @@ class Pool:
         player_pos_rate = 0
         factor_a = 8
         actions_count = len(self.actions)
-        if 21 <= actions_count <= 40:
-            factor_a = 7
-        if actions_count > 40:
+        if 21 <= actions_count <= 45:
             factor_a = 6
+        if actions_count > 45:
+            factor_a = 2
         full_cells = self._get_side_cells()
         for (a, b, c), cell in full_cells.items():
             content = cell['content']

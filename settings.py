@@ -15,4 +15,4 @@ PLAYER_MODE = 'player_mode'
 END_MODE = 'end_mode'
 
 AI_DEPTH = 3
-DEBUG = False
+DEBUG = True

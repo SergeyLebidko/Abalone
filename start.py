@@ -25,6 +25,7 @@ def main(cmp_color_label, player_color_label):
     player_score_pane = ScorePane(PLAYER_SIDE, pg, sc)
     mgs_pane = MsgPane(pg, sc)
     ai = Ai(pool)
+    action_generator = None
 
     mode = PLAYER_MODE
 
@@ -63,8 +64,12 @@ def main(cmp_color_label, player_color_label):
 
         # Секция расчета и применения следующего хода
         if not pool_painter.has_animate and mode == CMP_MODE:
-            action = ai.next_action()
-            apply_action(action, PLAYER_MODE, False)
+            if not action_generator:
+                action_generator = ai.action_generator()
+            action = next(action_generator)
+            if action:
+                apply_action(action, PLAYER_MODE, False)
+                action_generator = None
 
         # Секция взаимодействия с пользователем
         events = pg.event.get()

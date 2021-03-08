@@ -10,12 +10,12 @@ class Ai:
         self.pool = pool
         self.count = 0
 
-    def next_action(self):
+    def action_generator(self):
         actions = self.pool.create_actions(CMP_SIDE)
 
         # Свой первый ход компьютер выбирает случайным образом
         if len(self.pool.actions) == 1:
-            return random.choice(actions)
+            yield random.choice(actions)
 
         # Обнуляем счетчик просмотра позиций и фиксируем время
         self.count = 0
@@ -26,6 +26,7 @@ class Ai:
         beta = self.pool.MAX_RATE
         for action in actions:
             rate = self.rate(action, CMP_SIDE, alpha, beta, AI_DEPTH)
+            yield None
             if rate > alpha:
                 alpha = rate
             rate_actions.append((rate, action))
@@ -48,7 +49,7 @@ class Ai:
             )
             print(msg)
 
-        return rate_action[1]
+        yield rate_action[1]
 
     def rate(self, action, up_side, alpha, beta, d):
         # Если достигнута максимальная глубина перебора
