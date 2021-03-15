@@ -228,25 +228,25 @@ class Pool:
             return CMP_SIDE
         return None
 
-    @staticmethod
-    def _get_cmp_init_data():
+    def _get_cmp_init_data(self):
         result = []
         for a in range(-4, 5):
             for b in range(-4, 5):
                 for c in range(-4, 5):
                     if a == 4 or a == 3 or (a == 2 and b in [0, -1, -2]):
                         result.append((a, b, c))
-        return result
 
-    @staticmethod
-    def _get_player_init_data():
+        return set(result) & set(self.cells.keys())
+
+    def _get_player_init_data(self):
         result = []
         for a in range(-4, 5):
             for b in range(-4, 5):
                 for c in range(-4, 5):
                     if a == -4 or a == -3 or (a == -2 and b in [0, 1, 2]):
                         result.append((a, b, c))
-        return result
+
+        return set(result) & set(self.cells.keys())
 
     def _create_shift_actions(self, side):
         cells_side = self._get_cells_with_content(side)
