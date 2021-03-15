@@ -58,8 +58,8 @@ class Pool:
                 cell['content'] = PLAYER_SIDE
 
         # Поля для хранения количества шариков
-        self.cmp_balls_count = 14
-        self.player_balls_count = 14
+        self.cmp_balls_count = len(cmp_cell_keys)
+        self.player_balls_count = len(player_cell_keys)
 
         # Объекты для хранения копий состояний
         self.cells_copy = deepcopy(self.cells)
