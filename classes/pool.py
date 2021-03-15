@@ -153,7 +153,7 @@ class Pool:
             factor_a = 6
         if actions_count > 45:
             factor_a = 2
-        full_cells = self._get_side_cells()
+        full_cells = self._get_cells_with_content()
         for (a, b, c), cell in full_cells.items():
             content = cell['content']
             if content == PLAYER_SIDE:
@@ -249,7 +249,7 @@ class Pool:
         return result
 
     def _create_shift_actions(self, side):
-        cells_side = self._get_side_cells(side)
+        cells_side = self._get_cells_with_content(side)
         result = []
 
         # Внешний цикл - перебор длин цепочки
@@ -303,7 +303,7 @@ class Pool:
         return result
 
     def _create_line_actions(self, side):
-        cells_side = self._get_side_cells(side)
+        cells_side = self._get_cells_with_content(side)
         other_side = self.OTHER_SIDE_DICT[side]
 
         # Формируем группы ячеек и паттерны для них
@@ -345,7 +345,7 @@ class Pool:
 
         return result
 
-    def _get_side_cells(self, side=None):
+    def _get_cells_with_content(self, side=None):
         if side:
             return {key: cell for key, cell in self.cells.items() if cell['content'] == side}
         else:
