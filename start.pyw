@@ -89,7 +89,7 @@ def main(cmp_color_label, player_color_label):
 
             if not pool_painter.has_animate and event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 if mode == CMP_MODE:
-                    pool.retrieve_state()
+                    pool.restore_state()
                     action_generator = None
                     think_pane.hide()
                 cancel_action()

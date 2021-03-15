@@ -57,10 +57,16 @@ class Pool:
             if key in player_cell_keys:
                 cell['content'] = PLAYER_SIDE
 
+        # Поля для хранения количества шариков
+        self.cmp_balls_count = 14
+        self.player_balls_count = 14
+
         # Объекты для хранения копий состояний
         self.cells_copy = deepcopy(self.cells)
         self.actions_copy = deepcopy(self.actions)
         self.last_action_description_copy = deepcopy(self.last_action_description)
+        self.cmp_balls_count_copy = self.cmp_balls_count
+        self.player_balls_count_copy = self.player_balls_count
 
         # Готовим список паттернов для проверки наличия выталкивающих ходов
         self.drop_patterns = []
@@ -82,11 +88,15 @@ class Pool:
         self.cells_copy = deepcopy(self.cells)
         self.actions_copy = deepcopy(self.actions)
         self.last_action_description_copy = deepcopy(self.last_action_description)
+        self.cmp_balls_count_copy = self.cmp_balls_count
+        self.player_balls_count_copy = self.player_balls_count
 
-    def retrieve_state(self):
+    def restore_state(self):
         self.cells = self.cells_copy
         self.actions = self.actions_copy
         self.last_action_description = self.last_action_description_copy
+        self.cmp_balls_count = self.cmp_balls_count_copy
+        self.player_balls_count = self.player_balls_count_copy
 
     def apply_action(self, action):
         self.actions.append(action)
@@ -99,6 +109,10 @@ class Pool:
             side = old_cell['content']
             old_cell['content'] = None
             if not next_key:
+                if side == CMP_SIDE:
+                    self.cmp_balls_count -= 1
+                if side == PLAYER_SIDE:
+                    self.player_balls_count -= 1
                 continue
 
             next_cell = self.cells[next_key]
@@ -112,7 +126,7 @@ class Pool:
         }
         for index, (old_key, next_key) in enumerate(reversed(action)):
             if index == 0:
-                other_side = {CMP_SIDE: PLAYER_SIDE, PLAYER_SIDE: CMP_SIDE}[self.cells[next_key]['content']]
+                other_side = self.OTHER_SIDE_DICT[self.cells[next_key]['content']]
 
             if next_key:
                 side = self.cells[next_key]['content']
@@ -120,16 +134,15 @@ class Pool:
                 self.cells[old_key]['content'] = side
             else:
                 self.cells[old_key]['content'] = other_side
+                if other_side == CMP_SIDE:
+                    self.cmp_balls_count += 1
+                if other_side == PLAYER_SIDE:
+                    self.player_balls_count += 1
 
     def get_rating(self):
         # Первый этап оценки рейтинга - оценка количества шариков
-        cmp_count, player_count = self._balls_count()
-        if cmp_count < 9:
-            return (-1) * self.MAX_RATE
-        if player_count < 9:
-            return self.MAX_RATE
-        cmp_count_rate = (cmp_count ** 2) * 1900
-        player_count_rate = (player_count ** 2) * 1900
+        cmp_count_rate = (self.cmp_balls_count ** 2) * 1900
+        player_count_rate = (self.player_balls_count ** 2) * 1900
 
         # Второй этап оценки рейтинга - оценка близости шариков к центру доски и стороне противника
         cmp_pos_rate = 0
@@ -209,33 +222,11 @@ class Pool:
         return None
 
     def get_winner_side(self):
-        cmp_count, player_count = self._balls_count()
-        if cmp_count < 9:
+        if self.cmp_balls_count < 9:
             return PLAYER_SIDE
-        if player_count < 9:
+        if self.player_balls_count < 9:
             return CMP_SIDE
         return None
-
-    @property
-    def cmp_balls_count(self):
-        count, _ = self._balls_count()
-        return count
-
-    @property
-    def player_balls_count(self):
-        _, count = self._balls_count()
-        return count
-
-    def _balls_count(self):
-        cmp_count = 0
-        player_count = 0
-        for _, cell in self.cells.items():
-            if cell['content'] == CMP_SIDE:
-                cmp_count += 1
-            if cell['content'] == PLAYER_SIDE:
-                player_count += 1
-
-        return cmp_count, player_count
 
     @staticmethod
     def _get_cmp_init_data():

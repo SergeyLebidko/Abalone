@@ -79,6 +79,16 @@ class Ai:
 
         if up_side == CMP_SIDE:
             self.pool.apply_action(action)
+
+            # Если в результате применения хода победил компьютер, то дальнейший просмотр ходов не имеет смысла
+            # В такой ситуации сразу же присваиваем ходу наивысший рейтинг и возвращаем его
+            winner = self.pool.get_winner_side()
+            if winner == CMP_SIDE:
+                self.total_view_position_count += 1
+                self.current_count += 1
+                self.pool.cancel_action()
+                yield self.pool.MAX_RATE
+
             actions = self.pool.create_actions(PLAYER_SIDE)
             min_rate = self.pool.MAX_RATE * 1000
             for _action in actions:
@@ -102,6 +112,16 @@ class Ai:
 
         if up_side == PLAYER_SIDE:
             self.pool.apply_action(action)
+
+            # Если в результате применения хода победил игрок, то дальнейший просмотр ходов не имеет смысла
+            # В такой ситуации сразу же присваиваем ходу самый низкий рейтинг и возвращаем его
+            winner = self.pool.get_winner_side()
+            if winner == PLAYER_SIDE:
+                self.total_view_position_count += 1
+                self.current_count += 1
+                self.pool.cancel_action()
+                yield (-1) * self.pool.MAX_RATE
+
             actions = self.pool.create_actions(CMP_SIDE)
             max_rate = (-1) * self.pool.MAX_RATE * 1000
             for _action in actions:
